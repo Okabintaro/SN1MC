@@ -169,6 +169,7 @@ namespace SN1MC
                 Debug.Log("There is a error it is " + error1);
 
             Recenter();
+
             //Get the type of HMD (for Pimax bugfixing)
             // PIMAX 5K Plus = Vive MV
             // HMDModel = UnityEngine.XR.XRDevice.model;

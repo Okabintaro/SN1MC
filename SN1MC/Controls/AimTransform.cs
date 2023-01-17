@@ -3,6 +3,7 @@ using UnityEngine;
 using Valve.VR;
 
 //Sets the aim to the controller and gets rid of the old steamvr 
+// TODO: Not sure if this is actually needed anymore
 namespace SN1MC.Controls.UI
 {
 	public class AimTransform
@@ -13,7 +14,7 @@ namespace SN1MC.Controls.UI
 			[HarmonyPrefix]
 			static bool Prefix(ref Transform __result)
 			{
-				__result = VRHandsController.rightController.transform;
+				__result = VRCameraRig.instance.laserPointer.transform;
 				return false;
 			}
 		}
@@ -36,7 +37,7 @@ namespace SN1MC.Controls.UI
 			[HarmonyPrefix]
 			static bool Prefix(ref Transform __result)
 			{
-				__result = VRHandsController.rightController.transform;
+				__result = VRCameraRig.instance.laserPointer.transform;
 				return false;
 			}
 		}

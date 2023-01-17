@@ -5,8 +5,14 @@ using UnityEngine;
 namespace SN1MC.Controls
 {
 	extern alias SteamVRRef;
+	// TODO: Rename to GameInputSteamVR or something
 	class InputGame
 	{
+		// TODO: Remove/Fix this
+		public static bool ShouldIgnore(GameInput.Button button) {
+			return button == GameInput.Button.Slot1 || button == GameInput.Button.Slot2 || button == GameInput.Button.Slot3 || button == GameInput.Button.Slot4 || button == GameInput.Button.Slot5 || button == GameInput.Button.AutoMove;
+		}
+
 		[HarmonyPatch(typeof(GameInput), nameof(GameInput.GetButtonDown))]
 		public static class GameInput_GetButtonDown__Patch
 		{
@@ -16,6 +22,9 @@ namespace SN1MC.Controls
 				if (SN1MC.UsingSteamVR)
 				{
 					VRInputManager vrInput = new VRInputManager();
+					if (ShouldIgnore(button)) {
+						return false;
+					}
 					__result = vrInput.GetButtonDown(button, SteamVRRef.Valve.VR.SteamVR_Input_Sources.Any);
 				}
 				else
@@ -34,6 +43,9 @@ namespace SN1MC.Controls
 			{
 				if (SN1MC.UsingSteamVR)
 				{
+					if (ShouldIgnore(button)) {
+						return false;
+					}
 					VRInputManager vrInput = new VRInputManager();
 					__result = vrInput.GetButton(button, SteamVRRef.Valve.VR.SteamVR_Input_Sources.Any);
 				}
@@ -53,6 +65,9 @@ namespace SN1MC.Controls
 			{
 				if (SN1MC.UsingSteamVR)
 				{
+					if (ShouldIgnore(button)) {
+						return false;
+					}
 					VRInputManager vrInput = new VRInputManager();
 					__result = vrInput.GetButtonUp(button, SteamVRRef.Valve.VR.SteamVR_Input_Sources.Any);
 				}

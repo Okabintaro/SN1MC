@@ -12,7 +12,7 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <CommonDir>F:\Steam Games SSD\steamapps\common\</CommonDir>
+    <CommonDir>V:\SteamLibrary\steamapps\common\</CommonDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>$(CommonDir)Subnautica\QMods\$(AssemblyName)\</OutputPath>
+    <OutputPath>$(CommonDir)Subnautica\BepInEx\plugins\SubnauticaMotionControls\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -39,11 +39,11 @@
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp_publicized, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>$(CommonDir)Subnautica\BepInEx\core\BepInEx.dll</HintPath>
@@ -65,12 +65,12 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="SteamVR, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\SteamVR.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\SteamVR.dll</HintPath>
       <Aliases>SteamVRRef</Aliases>
     </Reference>
     <Reference Include="SteamVR_Actions, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\SteamVR_Actions.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\SteamVR_Actions.dll</HintPath>
       <Aliases>SteamVRActions</Aliases>
     </Reference>
     <Reference Include="System" />
@@ -85,12 +85,21 @@
     <Reference Include="Unity.TextMeshPro">
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.XR.Management, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\Unity.XR.Management.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.XR.OpenVR, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\Unity.XR.OpenVR.dll</HintPath>
+      <Aliases>OpenVRUnity</Aliases>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.AIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
@@ -107,7 +116,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
@@ -131,7 +140,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.UI.dll</HintPath>
@@ -141,7 +150,7 @@
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VehiclesModule">
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VRModule">
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\UnityEngine.VRModule.dll</HintPath>
@@ -157,7 +166,7 @@
     </Reference>
     <Reference Include="Valve.Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>F:\Steam Games SSD\steamapps\common\Subnautica\Subnautica_Data\Managed\Valve.Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\Valve.Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -165,16 +174,19 @@
     <Compile Include="Controls\AxisToButton.cs" />
     <Compile Include="Controls\Binding.cs" />
     <Compile Include="Controls\CameraControl.cs" />
+    <Compile Include="Controls\VRMainMenu.cs" />
     <Compile Include="Controls\CraftingMenu.cs" />
     <Compile Include="Controls\CustomTargeting.cs" />
     <Compile Include="Controls\AimTransform.cs" />
     <Compile Include="Controls\CustomUpdateMoveDirection.cs" />
-    <Compile Include="Controls\FpsInput.cs" />
-    <Compile Include="Controls\HandGUI.cs" />
+    <!-- <Compile Include="Controls\FpsInput.cs" /> -->
+    <Compile Include="Controls\FpsInputPatch.cs" />
+    <!-- <Compile Include="Controls\HandGUI.cs" /> -->
     <Compile Include="Controls\InputGame.cs" />
     <Compile Include="Controls\LaserPointerLeft.cs" />
-    <Compile Include="Controls\LaserPointer.cs" />
-    <Compile Include="Controls\LaserPointerMenu.cs" />
+    <Compile Include="Controls\VRCameraRig.cs" />
+    <!-- <Compile Include="Controls\VRInputModule.cs" /> -->
+    <Compile Include="Controls\LaserPointerNew.cs" />
     <Compile Include="Controls\ManagerScreenshot.cs" />
     <Compile Include="Controls\ManagerScreenShots.cs" />
     <Compile Include="Controls\OptionsMainMenu.cs" />
@@ -196,7 +208,7 @@
     <Compile Include="Controls\Vehicles\SeaglideMap.cs" />
     <Compile Include="Controls\Vehicles\SeaMothMotion.cs" />
     <Compile Include="Controls\VRHandsController.cs" />
-    <Compile Include="Controls\VRMenuController.cs" />
+    <!-- <Compile Include="Controls\VRMenuController.cs" /> -->
     <Compile Include="Controls\XRInputManager.cs" />
     <Compile Include="VRAnimationsFixer.cs" />
     <Compile Include="Main.cs" />

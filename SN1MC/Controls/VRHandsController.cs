@@ -13,21 +13,22 @@ namespace SN1MC.Controls
     {
         public static GameObject rightController;
         public static GameObject leftController;
+        public static Transform rightHand;
+        public static Transform leftHand;
+
         public static ArmsController armsController;
         public static Player player = Player.main;
         public static FullBodyBipedIK ik;
         public static FingerRig finger;
         private static VRHandsController _main;
-        public static LaserPointer laserPointer;
-        public static LaserPointer laserPointertest;
-        public static LaserPointerLeft laserPointerLeft;
+        public static LaserPointerNew laserPointer;
+        public static LaserPointerNew laserPointerLeft;
+
         public static float rotationX = 0;
         public static float rotationY = 0;
         public static float rotationZ = 0;
         public static float rotationW = 0;
         public static bool Started = false;
-        public static Transform rightHand;
-        public static Transform leftHand;
 
         public static VRHandsController main
         {
@@ -44,36 +45,26 @@ namespace SN1MC.Controls
         public void Initialize(ArmsController controller)
         {
             player = global::Utils.GetLocalPlayerComp();
-            VRMenuController.inMainMenu = false;
+            //VRMenuController.inMainMenu = false;
+            // TODO: Use common VR Rig with laser pointer from menu and game
             if (VRCustomOptionsMenu.EnableMotionControls)
             {
                 ik = controller.GetComponent<FullBodyBipedIK>();
                 armsController = controller;
 
-                rightController = new GameObject("rightController");
-                leftController = new GameObject("leftController");
+                rightController = VRCameraRig.instance.laserPointer.gameObject;
+                leftController = VRCameraRig.instance.laserPointer.gameObject;
+                laserPointer = VRCameraRig.instance.laserPointer;
+                laserPointerLeft = VRCameraRig.instance.laserPointerLeft;
 
-                rightHand = new GameObject().transform;
-                leftHand = new GameObject().transform;
-
-                if (laserPointer == null)
-                rightController.AddComponent<LaserPointer>();
-                 laserPointer = rightController.GetComponent<LaserPointer>();
-
-                if (laserPointerLeft == null)
-                    leftController.AddComponent<LaserPointerLeft>();
-                laserPointerLeft = leftController.GetComponent<LaserPointerLeft>();
+                rightHand = new GameObject(nameof(rightHand)).WithParent(rightController.transform).transform;
+                leftHand = new GameObject(nameof(leftHand)).WithParent(leftController.transform).transform;
             }
-            var cam = Player.main.camRoot.transform;
-            rightController.transform.parent = player.camRoot.transform;
-            leftController.transform.parent = player.camRoot.transform;
-            laserPointer.transform.parent = rightController.transform;
-            laserPointerLeft.transform.parent = leftController.transform;
-            Started = true;
 
+            Started = true;
         }
 
-        public void UpdateHandPositions()
+        public void DebugHandPositions()
         {
 
             if (!Input.GetKeyDown(KeyCode.LeftControl) && !Input.GetKeyDown(KeyCode.LeftAlt))
@@ -619,11 +610,6 @@ namespace SN1MC.Controls
                 ik.solver.leftHandEffector.target = leftHand;
                 laserPointer.pointerDot.transform.localScale = new Vector3(0.009f, 0.009f, 0.009f);
                 ik.solver.leftArmChain.bendConstraint.weight = 0;
-
-                if (!laserPointer.gameObject.activeSelf)
-                    laserPointer.gameObject.SetActive(true);
-                if (!laserPointer.pointerDot.activeSelf)
-                    laserPointer.pointerDot.SetActive(true);
             }
             else
             {
@@ -651,16 +637,23 @@ namespace SN1MC.Controls
             }
         }
 
+        // TODO: Move/cleanup this
         [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Start))]
         public static class ArmsController_Start_Patch
         {
             [HarmonyPostfix]
-            public static void Postffix(ArmsController __instance)
+            public static void Postfix(ArmsController __instance)
             {
                 if (!XRSettings.enabled || !VRCustomOptionsMenu.EnableMotionControls)
                 {
                     return;
                 }
+                Debug.Log("Initilazing Handscontroller");
+                // TODO/DOING: Fixing this
+                Camera mainCamera = SNCameraRoot.main.mainCam;
+                VRCameraRig.instance.ParentTo(mainCamera.transform.parent);
+                VRCameraRig.instance.StealCamera(mainCamera);
+
                 main.Initialize(__instance);
             }
         }
@@ -675,12 +668,12 @@ namespace SN1MC.Controls
                 {
                     return;
                 }
-                main.UpdateHandPositions();
+                // main.DebugHandPositions();
             }
         }
     }
 
-
+    // TODO: Describe, cleanup or remove if not needed
     [HarmonyPatch(typeof(uGUI_GraphicRaycaster), nameof(uGUI_GraphicRaycaster.UpdateGraphicRaycasters))]
     class uGUI_GraphicRaycaster_UpdateGraphicRaycasters_Patch
     {

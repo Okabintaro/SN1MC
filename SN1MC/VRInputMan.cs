@@ -6,6 +6,7 @@ namespace SN1MC
     //Steamvr Input
     extern alias SteamVRRef;
     extern alias SteamVRActions;
+    // TODO: Since this mostly handles SteamVR stuff, should be renamed to SteamVRInputManager
     public class VRInputManager
     {
         static VRInputManager()
@@ -42,6 +43,16 @@ namespace SN1MC
             GameInput.InputStateFlags inputStateFlags = (GameInput.InputStateFlags)0U;
             inputStateFlags |= GameInput.InputStateFlags.Held;
             return SteamVRRef.Valve.VR.SteamVR_Input.GetState(buttonName.ToString(), source);
+        }
+
+        public static void SwitchToUIBinding() {
+            SteamVRActions.Valve.VR.SteamVR_Actions.SubnauticaVRUI.Activate();
+            SteamVRActions.Valve.VR.SteamVR_Actions.SubnauticaVRMain.Deactivate();
+        }
+
+        public static void SwitchToGameBinding() {
+            SteamVRActions.Valve.VR.SteamVR_Actions.SubnauticaVRUI.Deactivate();
+            SteamVRActions.Valve.VR.SteamVR_Actions.SubnauticaVRMain.Activate();
         }
 
         public static void SetUpListeners()
