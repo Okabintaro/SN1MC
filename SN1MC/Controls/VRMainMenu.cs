@@ -30,6 +30,13 @@ namespace SN1MC.Controls
             // TODO: Increase UI fidelity?
         }
 
+        public static void SetupMainMenu()
+        {
+            Camera uiCamera = FindObjectsOfType<Camera>().First(c => c.name.Equals("UI Camera"));
+            VRCameraRig.instance.UseUICamera(uiCamera);
+            Camera mainCamera = GameObject.FindGameObjectsWithTag("MainCamera").First(c => c.name.Equals("Main Camera")).GetComponent<Camera>();
+            VRCameraRig.instance.StealCamera(mainCamera);
+        }
     }
 
     [HarmonyPatch(typeof(uGUI_MainMenu), nameof(uGUI_MainMenu.Awake))]
@@ -38,7 +45,8 @@ namespace SN1MC.Controls
         [HarmonyPostfix]
         public static void Postfix()
         {
-            VRMainMenu.ModifyMainMenuForVr();
+            //VRMainMenu.ModifyMainMenuForVr();
+            VRMainMenu.SetupMainMenu();
             VRInputManager.SwitchToUIBinding();
         }
     }

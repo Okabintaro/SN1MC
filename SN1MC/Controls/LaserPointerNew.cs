@@ -17,6 +17,9 @@ namespace SN1MC.Controls
         public Camera eventCamera;
         public FPSInputModule inputModule;
 
+        public bool doWorldRaycasts = true;
+        public bool useUILayer = false;
+
         void Start()
         {
             Material newMaterial = new Material(ShaderManager.preloadedShaders.DebugDisplaySolid);
@@ -44,6 +47,11 @@ namespace SN1MC.Controls
             lineRenderer.endColor = new Color(1f, 0f, 0f, 1f);
             lineRenderer.startWidth = 0.004f;
             lineRenderer.endWidth = 0.005f;
+
+            if (useUILayer) {
+                pointerDot.layer = LayerMask.NameToLayer("UI");
+                lineRenderer.gameObject.layer = LayerMask.NameToLayer("UI");
+            }
         }
 
         public void SetEnd(Vector3 end)
@@ -52,7 +60,6 @@ namespace SN1MC.Controls
             lineRenderer.SetPosition(1, end);
             pointerDot.transform.position = end;
         }
-
 
         private bool RayCastGameObjects(out RaycastHit hit)
         {
@@ -79,9 +86,9 @@ namespace SN1MC.Controls
                 length = hitDistance;
                 VRInputManager.SwitchToUIBinding();
             }
-            else
+            else if(doWorldRaycasts)
             {
-                RaycastHit hit = default(RaycastHit);
+                RaycastHit hit;
                 if (RayCastGameObjects(out hit)) {
                     length = hit.distance;
                 }

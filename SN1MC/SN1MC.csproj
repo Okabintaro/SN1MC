@@ -182,6 +182,7 @@
     <!-- <Compile Include="Controls\FpsInput.cs" /> -->
     <Compile Include="Controls\FpsInputPatch.cs" />
     <!-- <Compile Include="Controls\HandGUI.cs" /> -->
+    <Compile Include="Controls\GUIHandPatches.cs" />
     <Compile Include="Controls\InputGame.cs" />
     <Compile Include="Controls\LaserPointerLeft.cs" />
     <Compile Include="Controls\VRCameraRig.cs" />

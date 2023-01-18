@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.XR;
 using SN1MC.Controls.Tools;
 //Handles mostly tool stuff like deconstruct ect.
+// TODO: Figure out why this is needed exactly
 namespace SN1MC.Controls
 {
 	extern alias SteamVRRef;

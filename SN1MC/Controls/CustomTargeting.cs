@@ -76,10 +76,17 @@ namespace SN1MC.Controls
 		}
 
 		// Token: 0x06003E19 RID: 15897 RVA: 0x0015AE38 File Offset: 0x00159038
+		// TODO: Use better patching?
 		public static bool GetTarget(float maxDistance, out GameObject result, out float distance)
 		{
 			bool flag = false;
-			Transform transform = VRHandsController.rightController.transform;
+			if (VRHandsController.laserPointer == null)
+            {
+				result = null;
+				distance = 0;
+				return false;
+            }
+			Transform transform = VRHandsController.laserPointer.transform;
 			Vector3 position = transform.position;
 			Vector3 forward = transform.forward;
 			Ray ray = new Ray(position, forward);

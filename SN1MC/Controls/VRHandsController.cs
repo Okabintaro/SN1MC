@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using UnityEngine.XR;
+using UWE;
 
 //This is what makes the hands move and adds the laser pointers to them
 namespace SN1MC.Controls
@@ -653,8 +654,38 @@ namespace SN1MC.Controls
                 Camera mainCamera = SNCameraRoot.main.mainCam;
                 VRCameraRig.instance.ParentTo(mainCamera.transform.parent);
                 VRCameraRig.instance.StealCamera(mainCamera);
+                //VRCameraRig.instance.UseUICamera(SNCameraRoot.main.guiCam, true);
 
-                main.Initialize(__instance);
+                // NOTE: This kinda works! 
+                var newPos = new Vector3(10, 0, 0);
+                VRCameraRig.instance.uiCamera.transform.position = Vector2.zero;
+                VRCameraRig.instance.uiCamera.transform.rotation = Quaternion.identity;
+                //VRCameraRig.instance.uiCamera = SNCameraRoot.main.guiCam;
+                VRCameraRig.instance.uiRig.transform.position = newPos;
+                VRCameraRig.instance.uiRig.transform.rotation = Quaternion.identity;
+                VRCameraRig.instance.trackMainCamera = true;
+                FindObjectOfType<uGUI>().gameObject.transform.position = newPos;
+                var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
+                foreach (var scaler in scalers)
+                {
+                    scaler.vrMode = uGUI_CanvasScaler.Mode.Static;
+                }
+                foreach (var m in FindObjectsOfType<IngameMenu>())
+                {
+                    m.transform.position = newPos;
+                    Debug.Log($"Setting up for {m.name}");
+                    m.gameObject.GetComponent<uGUI_CanvasScaler>().vrMode = uGUI_CanvasScaler.Mode.Static;
+                }
+                // Can I do this?
+                // Answer: NO
+                //Destroy(SNCameraRoot.main.guiCam.gameObject);
+                //SNCameraRoot.main.guiCam.enabled = false;
+                //SNCameraRoot.main.guiCamera = VRCameraRig.instance.uiCamera;
+
+                // TODO: Have to trigger update somehow, e.g. toggling SteamVR Dashboard
+                //       Toggeling uGUI/ScreenCanvas on/off fixes it
+                // TODO: IngameMenu doesn't have vrmode to static, gets cloned somewhere
+
             }
         }
 
@@ -674,41 +705,41 @@ namespace SN1MC.Controls
     }
 
     // TODO: Describe, cleanup or remove if not needed
-    [HarmonyPatch(typeof(uGUI_GraphicRaycaster), nameof(uGUI_GraphicRaycaster.UpdateGraphicRaycasters))]
-    class uGUI_GraphicRaycaster_UpdateGraphicRaycasters_Patch
-    {
-        [HarmonyPrefix]
-        public static bool Prefix(uGUI_GraphicRaycaster __instance)
-        {
-            foreach (uGUI_GraphicRaycaster uGUI_GraphicRaycaster in uGUI_GraphicRaycaster.allRaycasters)
-            {
-                if (uGUI_GraphicRaycaster.updateRaycasterStatusDelegate != null)
-                {
-                    uGUI_GraphicRaycaster.updateRaycasterStatusDelegate(uGUI_GraphicRaycaster);
-                }
-                else if (uGUI_GraphicRaycaster.interactionDistance > 0f)
-                {
-                    if (Vector3.SqrMagnitude(VRHandsController.rightController.transform.position - uGUI_GraphicRaycaster.transform.position) < uGUI_GraphicRaycaster.interactionDistance * uGUI_GraphicRaycaster.interactionDistance)
-                    {
-                        uGUI_GraphicRaycaster.enabled = true;
-                    }
-                    else
-                    {
-                        uGUI_GraphicRaycaster.enabled = false;
-                    }
-                    if (Vector3.SqrMagnitude(VRHandsController.leftController.transform.position - uGUI_GraphicRaycaster.transform.position) < uGUI_GraphicRaycaster.interactionDistance * uGUI_GraphicRaycaster.interactionDistance)
-                    {
-                        uGUI_GraphicRaycaster.enabled = true;
-                    }
-                    else
-                    {
-                        uGUI_GraphicRaycaster.enabled = false;
-                    }
-                }
-            }
-            return false;
-        }
-    }
+    //[HarmonyPatch(typeof(uGUI_GraphicRaycaster), nameof(uGUI_GraphicRaycaster.UpdateGraphicRaycasters))]
+    //class uGUI_GraphicRaycaster_UpdateGraphicRaycasters_Patch
+    //{
+    //    [HarmonyPrefix]
+    //    public static bool Prefix(uGUI_GraphicRaycaster __instance)
+    //    {
+    //        foreach (uGUI_GraphicRaycaster uGUI_GraphicRaycaster in uGUI_GraphicRaycaster.allRaycasters)
+    //        {
+    //            if (uGUI_GraphicRaycaster.updateRaycasterStatusDelegate != null)
+    //            {
+    //                uGUI_GraphicRaycaster.updateRaycasterStatusDelegate(uGUI_GraphicRaycaster);
+    //            }
+    //            else if (uGUI_GraphicRaycaster.interactionDistance > 0f)
+    //            {
+    //                if (Vector3.SqrMagnitude(VRHandsController.rightController.transform.position - uGUI_GraphicRaycaster.transform.position) < uGUI_GraphicRaycaster.interactionDistance * uGUI_GraphicRaycaster.interactionDistance)
+    //                {
+    //                    uGUI_GraphicRaycaster.enabled = true;
+    //                }
+    //                else
+    //                {
+    //                    uGUI_GraphicRaycaster.enabled = false;
+    //                }
+    //                if (Vector3.SqrMagnitude(VRHandsController.leftController.transform.position - uGUI_GraphicRaycaster.transform.position) < uGUI_GraphicRaycaster.interactionDistance * uGUI_GraphicRaycaster.interactionDistance)
+    //                {
+    //                    uGUI_GraphicRaycaster.enabled = true;
+    //                }
+    //                else
+    //                {
+    //                    uGUI_GraphicRaycaster.enabled = false;
+    //                }
+    //            }
+    //        }
+    //        return false;
+    //    }
+    //}
 
     [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Reconfigure))]
     class ArmsController_Reconfigure_Patch

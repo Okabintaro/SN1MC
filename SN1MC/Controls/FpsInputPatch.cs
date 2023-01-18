@@ -32,5 +32,6 @@ namespace SN1MC.Controls
             __result = new Vector2(eventCamera.pixelWidth / 2, eventCamera.pixelHeight / 2);
         }
     }
+
 }
 
