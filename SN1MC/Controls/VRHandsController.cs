@@ -68,6 +68,7 @@ namespace SN1MC.Controls
         public void DebugHandPositions()
         {
 
+
             if (!Input.GetKeyDown(KeyCode.LeftControl) && !Input.GetKeyDown(KeyCode.LeftAlt))
             {
                 if (Input.GetKeyDown(KeyCode.KeypadPlus))
@@ -121,11 +122,11 @@ namespace SN1MC.Controls
             //Get Right controller Position and Rotation
             if (SN1MC.UsingSteamVR)
             {
-                rightController.transform.localPosition = Vector3.Lerp(rightController.transform.localPosition, VRInputManager.RightControllerPosition, VRCustomOptionsMenu.ikSmoothing);
-                rightController.transform.localRotation = Quaternion.Lerp(rightController.transform.localRotation, VRInputManager.RightControllerRotation, VRCustomOptionsMenu.ikSmoothing);
+                rightController.transform.localPosition = Vector3.Lerp(rightController.transform.localPosition, SteamVRInputManager.RightControllerPosition, VRCustomOptionsMenu.ikSmoothing);
+                rightController.transform.localRotation = Quaternion.Lerp(rightController.transform.localRotation, SteamVRInputManager.RightControllerRotation, VRCustomOptionsMenu.ikSmoothing);
 
-                leftController.transform.localPosition = Vector3.Lerp(leftController.transform.localPosition, VRInputManager.LeftControllerPosition, VRCustomOptionsMenu.ikSmoothing);
-                leftController.transform.localRotation = Quaternion.Lerp(leftController.transform.localRotation, VRInputManager.LeftControllerRotation, VRCustomOptionsMenu.ikSmoothing);
+                leftController.transform.localPosition = Vector3.Lerp(leftController.transform.localPosition, SteamVRInputManager.LeftControllerPosition, VRCustomOptionsMenu.ikSmoothing);
+                leftController.transform.localRotation = Quaternion.Lerp(leftController.transform.localRotation, SteamVRInputManager.LeftControllerRotation, VRCustomOptionsMenu.ikSmoothing);
             }
             else
             {
@@ -649,43 +650,14 @@ namespace SN1MC.Controls
                 {
                     return;
                 }
-                Debug.Log("Initilazing Handscontroller");
                 // TODO/DOING: Fixing this
                 Camera mainCamera = SNCameraRoot.main.mainCam;
                 VRCameraRig.instance.ParentTo(mainCamera.transform.parent);
-                VRCameraRig.instance.StealCamera(mainCamera);
-                //VRCameraRig.instance.UseUICamera(SNCameraRoot.main.guiCam, true);
-
-                // NOTE: This kinda works! 
-                var newPos = new Vector3(10, 0, 0);
-                VRCameraRig.instance.uiCamera.transform.position = Vector2.zero;
-                VRCameraRig.instance.uiCamera.transform.rotation = Quaternion.identity;
-                //VRCameraRig.instance.uiCamera = SNCameraRoot.main.guiCam;
-                VRCameraRig.instance.uiRig.transform.position = newPos;
-                VRCameraRig.instance.uiRig.transform.rotation = Quaternion.identity;
-                VRCameraRig.instance.trackMainCamera = true;
-                FindObjectOfType<uGUI>().gameObject.transform.position = newPos;
-                var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
-                foreach (var scaler in scalers)
-                {
-                    scaler.vrMode = uGUI_CanvasScaler.Mode.Static;
-                }
-                foreach (var m in FindObjectsOfType<IngameMenu>())
-                {
-                    m.transform.position = newPos;
-                    Debug.Log($"Setting up for {m.name}");
-                    m.gameObject.GetComponent<uGUI_CanvasScaler>().vrMode = uGUI_CanvasScaler.Mode.Static;
-                }
-                // Can I do this?
-                // Answer: NO
-                //Destroy(SNCameraRoot.main.guiCam.gameObject);
-                //SNCameraRoot.main.guiCam.enabled = false;
-                //SNCameraRoot.main.guiCamera = VRCameraRig.instance.uiCamera;
+                VRCameraRig.instance.StealCamera(SNCameraRoot.main.mainCamera);
+                CoroutineHost.StartCoroutine(VRCameraRig.instance.SetupGameCameras());
 
                 // TODO: Have to trigger update somehow, e.g. toggling SteamVR Dashboard
                 //       Toggeling uGUI/ScreenCanvas on/off fixes it
-                // TODO: IngameMenu doesn't have vrmode to static, gets cloned somewhere
-
             }
         }
 

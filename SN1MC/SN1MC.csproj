@@ -41,6 +41,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass_publicized">
+      <HintPath>V:\SteamLibrary\steamapps\common\Subnautica\Subnautica_Data\Managed\publicized_assemblies\Assembly-CSharp-firstpass_publicized.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp_publicized, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(CommonDir)Subnautica\Subnautica_Data\Managed\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
@@ -215,13 +218,13 @@
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecenterVRButtonAdder.cs" />
-    <Compile Include="VRInputMan.cs" />
+    <Compile Include="SteamVRInputmanager.cs" />
     <Compile Include="VRLoadingScreen.cs" />
     <Compile Include="VRCustomOptionsMenu.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(ProjectDir)bin\Debug\SN1MC.dll" "$(CommonDir)Subnautica\BepInEx\plugins\SubnauticaMotionControls"</PostBuildEvent>
+   <PostBuildEvent>copy "$(ProjectDir)bin\Debug\SN1MC.dll" "$(CommonDir)Subnautica\BepInEx\plugins\SubnauticaMotionControls"</PostBuildEvent>
   </PropertyGroup>
 </Project>

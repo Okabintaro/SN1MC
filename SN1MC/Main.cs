@@ -9,6 +9,7 @@ using UnityEngine.XR;
 using System.Collections.Generic;
 using System.IO;
 using Valve.VR;
+using BepInEx.Logging;
 using System;
 
 namespace SN1MC
@@ -18,14 +19,17 @@ namespace SN1MC
     extern alias SteamVRActions;
     [BepInPlugin(pluginGUID, pluginGUID, pluginVersion)]
     [BepInProcess("subnautica.exe")]
-    public class Loader : BaseUnityPlugin
+    public class Mod : BaseUnityPlugin
     {
         private const string pluginGUID = "mod.ihatetn931.subnautica.motioncontrols";
         private const string pluginName = "Motion Controls Subnautica";
         private const string pluginVersion = "1.0.0";
 
+        public static ManualLogSource logger;
+
         void Awake()
         {
+            logger = Logger;
             //I guess if they don't want to play in vr they don't have to.
             if (!UnityEngine.XR.XRSettings.enabled)
             {

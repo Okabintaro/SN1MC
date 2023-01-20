@@ -84,7 +84,7 @@ namespace SN1MC.Controls
             if (hitDistance != 0)
             {
                 length = hitDistance;
-                VRInputManager.SwitchToUIBinding();
+                SteamVRInputManager.SwitchToUIBinding();
             }
             else if(doWorldRaycasts)
             {
@@ -92,7 +92,7 @@ namespace SN1MC.Controls
                 if (RayCastGameObjects(out hit)) {
                     length = hit.distance;
                 }
-                VRInputManager.SwitchToGameBinding();
+                SteamVRInputManager.SwitchToGameBinding();
             }
             Vector3 endPos = transform.position + (transform.forward * length);
 
@@ -100,34 +100,6 @@ namespace SN1MC.Controls
             lineRenderer.SetPosition(1, endPos);
             pointerDot.transform.position = endPos;
         }
-
-        // void UpdateLaserPointer()
-        // {
-        //     Ray raycast = new Ray(transform.position, transform.forward);
-        //     var layerNames = new string[] { "Default", "Interior", "TerrainCollider", "Trigger", "UI", "Useable" };
-        //     var layerMask = LayerMask.GetMask(layerNames);
-        //     bool triggerHit = Physics.Raycast(raycast, out triggerObject, layerMask);
-        //     lineRenderer.SetPosition(0, transform.position);
-        //     if (FPSInputModule.current.lastRaycastResult.isValid)
-        //     {
-        //         int layer = FPSInputModule.current.lastRaycastResult.gameObject.layer;
-        //         var screenPointToRay = MainCamera.camera.ScreenPointToRay(FPSInputModule.current.lastRaycastResult.screenPosition).GetPoint(FPSInputModule.current.lastRaycastResult.distance);
-        //         var screenPointToRay1 = FPSInputModule.current.lastRaycastResult.module.eventCamera.ScreenPointToRay(FPSInputModule.current.lastRaycastResult.worldPosition).GetPoint(FPSInputModule.current.lastRaycastResult.distance);
-
-        //         if (layer == 0 && !VRHandsController.Started)
-        //         {
-        //             lineRenderer.gameObject.layer = LayerID.UI;
-        //         }
-        //         else
-        //         {
-        //             lineRenderer.gameObject.layer = LayerID.Default;
-        //         }
-        //         Vector3 pos = VRHandsController.rightController.transform.position + VRHandsController.rightController.transform.forward * FPSInputModule.current.maxInteractionDistance;
-        //         lineRenderer.SetPosition(1, Vector3.MoveTowards(transform.position, pos, FPSInputModule.current.maxInteractionDistance));
-        //         FPSInputModule.current.lastRaycastResult.Clear();
-        //     }
-        // }
-
 
     }
 }

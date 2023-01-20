@@ -21,7 +21,7 @@ namespace SN1MC.Controls
 			{
 				if (SN1MC.UsingSteamVR)
 				{
-					VRInputManager vrInput = new VRInputManager();
+					SteamVRInputManager vrInput = new SteamVRInputManager();
 					if (ShouldIgnore(button)) {
 						return false;
 					}
@@ -46,7 +46,7 @@ namespace SN1MC.Controls
 					if (ShouldIgnore(button)) {
 						return false;
 					}
-					VRInputManager vrInput = new VRInputManager();
+					SteamVRInputManager vrInput = new SteamVRInputManager();
 					__result = vrInput.GetButton(button, SteamVRRef.Valve.VR.SteamVR_Input_Sources.Any);
 				}
 				else
@@ -68,7 +68,7 @@ namespace SN1MC.Controls
 					if (ShouldIgnore(button)) {
 						return false;
 					}
-					VRInputManager vrInput = new VRInputManager();
+					SteamVRInputManager vrInput = new SteamVRInputManager();
 					__result = vrInput.GetButtonUp(button, SteamVRRef.Valve.VR.SteamVR_Input_Sources.Any);
 				}
 				else
@@ -122,7 +122,7 @@ namespace SN1MC.Controls
 
 		public static void UpdateMoveDirectionSteamVR()
 		{
-			VRInputManager vrInput = new VRInputManager();
+			SteamVRInputManager vrInput = new SteamVRInputManager();
 			float num = 0f;
 			num += GameInput.GetAnalogValueForButton(GameInput.Button.MoveForward);
 			num -= GameInput.GetAnalogValueForButton(GameInput.Button.MoveBackward);
@@ -231,6 +231,16 @@ namespace SN1MC.Controls
 				return false;
 			}
 		}
+		//[HarmonyPatch(typeof(GameInput), nameof(GameInput.GetPrimaryDevice))]
+		//public static class GameInput_FakeController_Patch
+		//{
+		//	[HarmonyPrefix]
+		//	static bool Prefix(GameInput __instance, GameInput.Device __result)
+		//	{
+		//		__result = GameInput.Device.Controller;
+		//		return false;
+		//	}
+		//}
 
 		[HarmonyPatch(typeof(GameInput), nameof(GameInput.UpdateMoveDirection))]
 		public static class GameInput_UpdateMoveDirection__Patch

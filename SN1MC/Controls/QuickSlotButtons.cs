@@ -12,7 +12,7 @@ namespace SN1MC.Controls
 			[HarmonyPrefix]
 			static bool Prefix(uGUI_QuickSlots __instance)
 			{
-				VRInputManager vrInput = new VRInputManager();
+				SteamVRInputManager vrInput = new SteamVRInputManager();
 				Player main = Player.main;
 				if (!main.GetCanItemBeUsed())
 				{

@@ -28,6 +28,7 @@ namespace SN1MC.Controls
             if (VRCameraRig.instance == null || VRCameraRig.instance.EventCamera == null) {
                 return;
             }
+            // TODO: Check if this could be better patched in the raycaster canvas
             var eventCamera = VRCameraRig.instance.EventCamera;
             __result = new Vector2(eventCamera.pixelWidth / 2, eventCamera.pixelHeight / 2);
         }

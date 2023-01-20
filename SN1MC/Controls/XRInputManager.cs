@@ -180,10 +180,10 @@ namespace SN1MC
                 }
                 if (SN1MC.UsingSteamVR)
                 {
-                    Vector2 vec = new Vector2(VRInputManager.LeftAxis.x, VRInputManager.LeftAxis.y);
+                    Vector2 vec = new Vector2(SteamVRInputManager.LeftAxis.x, SteamVRInputManager.LeftAxis.y);
                     GameInput.axisValues[2] = vec.x;
                     GameInput.axisValues[3] = -vec.y;
-                    Vector2 vec2 = new Vector2(VRInputManager.RightAxis.x, VRInputManager.RightAxis.y);
+                    Vector2 vec2 = new Vector2(SteamVRInputManager.RightAxis.x, SteamVRInputManager.RightAxis.y);
                     GameInput.axisValues[0] = vec2.x;
                     GameInput.axisValues[1] = -vec2.y;
                     // TODO: Use deadzone?
@@ -492,7 +492,7 @@ namespace SN1MC
             [HarmonyPrefix]
             static void Prefix(FPSInputModule __instance)
             {
-                VRInputManager vrInput = new VRInputManager();
+                SteamVRInputManager vrInput = new SteamVRInputManager();
                 if (__instance.lockPauseMenu)
                 {
                     return;

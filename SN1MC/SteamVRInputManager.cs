@@ -6,11 +6,12 @@ namespace SN1MC
     //Steamvr Input
     extern alias SteamVRRef;
     extern alias SteamVRActions;
-    // TODO: Since this mostly handles SteamVR stuff, should be renamed to SteamVRInputManager
-    public class VRInputManager
+    // TODO: Should this be a singleton? Could be replaced by SteamVR Components maybe
+    public class SteamVRInputManager
     {
-        static VRInputManager()
+        static SteamVRInputManager()
         {
+            Mod.logger.LogInfo($"Setting up {nameof(SteamVRInputManager)}");
             if(SN1MC.UsingSteamVR)
                 SetUpListeners();
         }

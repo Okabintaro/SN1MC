@@ -28,6 +28,27 @@ namespace SN1MC.Controls
             obj.transform.parent = target.transform;
             return obj;
         }
+
+        public static ParentConstraint ParentTo(this ParentConstraint parentConstraint, Transform target, Vector3 translationOffset)
+        {
+            // Remove old sources
+            for (int i = 0; i < parentConstraint.sourceCount; i++)
+            {
+                parentConstraint.RemoveSource(0);
+            }
+
+            var cs = new ConstraintSource();
+            cs.sourceTransform = target;
+            cs.weight = 1.0f;
+            parentConstraint.AddSource(cs);
+            parentConstraint.SetTranslationOffset(0, translationOffset);
+            parentConstraint.SetRotationOffset(0, Vector3.zero);
+            parentConstraint.locked = true;
+            parentConstraint.constraintActive = true;
+            parentConstraint.weight = 1.0f;
+
+            return parentConstraint;
+        }
     }
 
     class VRCameraRig : MonoBehaviour {
@@ -51,7 +72,7 @@ namespace SN1MC.Controls
         private GameObject modelRUI;
 
         public Camera uiCamera = null;
-        public bool trackMainCamera;
+        public bool uiTrackHead = false;
 
         public Camera EventCamera {
             get {
@@ -60,6 +81,10 @@ namespace SN1MC.Controls
                 }
                 return laserPointerUI.eventCamera;
             }
+        }
+
+        public void ParentTo(Transform target) {
+            GetComponent<ParentConstraint>().ParentTo(target, Vector3.zero);
         }
 
 
@@ -103,6 +128,8 @@ namespace SN1MC.Controls
 
             parentConstraint = gameObject.AddComponent<ParentConstraint>();
             parentConstraint.constraintActive = false;
+
+            // CoroutineHost.StartCoroutine(DebugPositions());
         }
 
         private void SetupControllerModels()
@@ -110,47 +137,25 @@ namespace SN1MC.Controls
 
             // Create two cubes to show controller positions
             // TODO: Replace with actual models from steamvr
-            modelR = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            modelR.transform.parent = rightController.transform;
-            modelR.transform.localPosition.Set(0, 0, 0);
-            modelR.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            Object.DestroyImmediate(modelR.GetComponent<BoxCollider>());
+            // modelR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // modelR.transform.parent = rightController.transform;
+            // modelR.transform.localPosition.Set(0, 0, 0);
+            // modelR.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+            // Object.Destroy(modelR.GetComponent<BoxCollider>());
 
-            modelL = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            modelL.transform.parent = leftController.transform;
-            modelL.transform.localPosition.Set(0, 0, 0);
-            modelL.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            Object.DestroyImmediate(modelL.GetComponent<BoxCollider>());
+            // modelL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // modelL.transform.parent = leftController.transform;
+            // modelL.transform.localPosition.Set(0, 0, 0);
+            // modelL.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+            // Object.Destroy(modelL.GetComponent<BoxCollider>());
 
-            // Create two cubes to show controller positions
-            // TODO: Replace with actual models from steamvr
             modelRUI = GameObject.CreatePrimitive(PrimitiveType.Cube);
             modelRUI.transform.parent = rightControllerUI.transform;
             modelRUI.transform.localPosition.Set(0, 0, 0);
             modelRUI.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            modelRUI.layer = LayerMask.NameToLayer("UI");
-            Object.DestroyImmediate(modelRUI.GetComponent<BoxCollider>());
+            modelRUI.layer = LayerID.UI;
+            Object.Destroy(modelRUI.GetComponent<BoxCollider>());
         }
-
-        public void ParentTo(Transform target)
-        {
-            // Remove old sources
-            for (int i = 0; i < parentConstraint.sourceCount; i++)
-            {
-                parentConstraint.RemoveSource(0);
-            }
-
-            var cs = new ConstraintSource();
-            cs.sourceTransform = target;
-            cs.weight = 1.0f;
-            parentConstraint.AddSource(cs);
-            parentConstraint.SetTranslationOffset(0, Vector3.zero);
-            parentConstraint.SetRotationOffset(0, Vector3.zero);
-            parentConstraint.locked = true;
-            parentConstraint.constraintActive = true;
-            parentConstraint.weight = 1.0f;
-        }
-
 
         // This is used to get the camera from the main menu
         // Main issue with making a new camera was the water surface but that should also be fixable
@@ -168,25 +173,31 @@ namespace SN1MC.Controls
             transform.position = oldPos;
             vrCamera.transform.parent = this.transform;
         }
-        public void UseUICamera(Camera camera, bool trackMain=false) {
+
+        public void UseUICamera(Camera camera, bool fromGame=false) {
             uiRig.transform.SetPositionAndRotation(camera.transform.position, camera.transform.rotation);
-            
-            // TODO: I think this is wrong. Right should be 0, 0, while camera is above rig
             if (uiCamera != null)
             {
                 Destroy(uiCamera.gameObject);
             }
-            uiCamera = camera;
-            camera.transform.parent = uiRig.transform;
-            camera.transform.localPosition = Vector3.zero;
-            camera.transform.localRotation = Quaternion.identity;
 
-            // TODO: Move this hack somewhere else and explain why we move away a bit
-            trackMainCamera = trackMain;
-            if (trackMain) {
-                var newPos = new Vector3(10, 0, 0);
-                uiRig.transform.position = newPos;
-                FindObjectOfType<uGUI>().gameObject.transform.position = newPos;
+            if(fromGame) {
+                // This fixes a weird issue I had, where the UI Camera from the game would behave like it wasnt moving
+                // even though the transform was changing properly.
+                // Maybe it is because the tracking was once disabled in the main game, but I am not sure, since I tried enabling it too.
+                // Copying the properties from the main camera and setting up the original important properties fixed it.
+                uiRig.transform.position = Vector3.zero;
+                var oldMask = camera.cullingMask;
+                var oldClear = camera.clearFlags;
+
+                camera.CopyFrom(SNCameraRoot.main.mainCamera);
+                camera.transform.localPosition = Vector3.zero;
+                camera.transform.localRotation = Quaternion.identity;
+                camera.renderingPath = RenderingPath.Forward;
+                camera.cullingMask = oldMask;
+                camera.clearFlags = oldClear;
+
+                // Set all canvas scalers to static, which makes UI better usable
                 var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
                 foreach (var scaler in scalers)
                 {
@@ -194,39 +205,57 @@ namespace SN1MC.Controls
                 }
                 foreach (var m in FindObjectsOfType<IngameMenu>())
                 {
-                    m.transform.position = newPos;
+                    m.gameObject.GetComponent<uGUI_CanvasScaler>().vrMode = uGUI_CanvasScaler.Mode.Static;
                 }
 
+            } else { 
+                camera.transform.parent = uiRig.transform;
+                camera.transform.localPosition = Vector3.zero;
+                camera.transform.localRotation = Quaternion.identity;
             }
-
-
-            CoroutineHost.StartCoroutine(EnableTracking());
+            uiCamera = camera;
         }
 
-        public static IEnumerator EnableTracking() {
+        public IEnumerator SetupGameCameras() {
+            VRCameraRig.instance.StealCamera(SNCameraRoot.main.mainCamera);
             yield return new WaitForSeconds(1.0f);
-            XRDevice.DisableAutoXRCameraTracking(VRCameraRig.instance.uiCamera, false);
+            VRCameraRig.instance.UseUICamera(SNCameraRoot.main.guiCamera, true);
+            yield return new WaitForSeconds(1.0f);
+            uGUI.main.screenCanvas.gameObject.AddComponent<ParentConstraint>().ParentTo(uiCamera.transform, Vector3.forward);
+
             yield break;
         }
 
-        private void UpdateSteamVRControllers() {
-            rightController.transform.localPosition = VRInputManager.RightControllerPosition;
-            leftController.transform.localPosition = VRInputManager.LeftControllerPosition;
-            rightController.transform.localRotation = VRInputManager.RightControllerRotation;
-            leftController.transform.localRotation = VRInputManager.LeftControllerRotation;
+       public IEnumerator DebugPositions() {
+            while (true)
+            {
+                try
+                {
+                    ErrorMessage.AddDebug($"uiCameraPos: {uiCamera.transform.position}");
+                }
+                catch { }
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
 
-            rightControllerUI.transform.localPosition = VRInputManager.RightControllerPosition;
-            leftControllerUI.transform.localPosition = VRInputManager.LeftControllerPosition;
-            rightControllerUI.transform.localRotation = VRInputManager.RightControllerRotation;
-            leftControllerUI.transform.localRotation = VRInputManager.LeftControllerRotation;
+        private void UpdateSteamVRControllers() {
+            rightController.transform.localPosition = SteamVRInputManager.RightControllerPosition;
+            leftController.transform.localPosition = SteamVRInputManager.LeftControllerPosition;
+            rightController.transform.localRotation = SteamVRInputManager.RightControllerRotation;
+            leftController.transform.localRotation = SteamVRInputManager.LeftControllerRotation;
+
+            rightControllerUI.transform.localPosition = SteamVRInputManager.RightControllerPosition;
+            leftControllerUI.transform.localPosition = SteamVRInputManager.LeftControllerPosition;
+            rightControllerUI.transform.localRotation = SteamVRInputManager.RightControllerRotation;
+            leftControllerUI.transform.localRotation = SteamVRInputManager.LeftControllerRotation;
 
             // TODO: Enable when needed
             if (false)
             {
-                rightController.transform.localPosition = Vector3.Lerp(rightController.transform.localPosition, VRInputManager.RightControllerPosition, VRCustomOptionsMenu.ikSmoothing);
-                rightController.transform.localRotation = Quaternion.Lerp(rightController.transform.localRotation, VRInputManager.RightControllerRotation, VRCustomOptionsMenu.ikSmoothing);
-                leftController.transform.localPosition = Vector3.Lerp(leftController.transform.localPosition, VRInputManager.LeftControllerPosition, VRCustomOptionsMenu.ikSmoothing);
-                leftController.transform.localRotation = Quaternion.Lerp(leftController.transform.localRotation, VRInputManager.LeftControllerRotation, VRCustomOptionsMenu.ikSmoothing);
+                rightController.transform.localPosition = Vector3.Lerp(rightController.transform.localPosition, SteamVRInputManager.RightControllerPosition, VRCustomOptionsMenu.ikSmoothing);
+                rightController.transform.localRotation = Quaternion.Lerp(rightController.transform.localRotation, SteamVRInputManager.RightControllerRotation, VRCustomOptionsMenu.ikSmoothing);
+                leftController.transform.localPosition = Vector3.Lerp(leftController.transform.localPosition, SteamVRInputManager.LeftControllerPosition, VRCustomOptionsMenu.ikSmoothing);
+                leftController.transform.localRotation = Quaternion.Lerp(leftController.transform.localRotation, SteamVRInputManager.LeftControllerRotation, VRCustomOptionsMenu.ikSmoothing);
             }
         }
         
@@ -252,29 +281,10 @@ namespace SN1MC.Controls
             {
                 UpdateXRControllers();
             }
-            if (trackMainCamera) {
-                uiCamera.transform.localPosition = vrCamera.transform.localPosition;
-                uiCamera.transform.localRotation = vrCamera.transform.localRotation;
-            }
         }
 
         public void Update() {
             UpdateControllerPositions();
-        }
-
-        // TODO: This is temporary. Need to patch FPSInput properly.
-        public IEnumerator SwapInputModule()
-        {
-            yield return new WaitForSeconds(1.0f);
-
-            // VRInputModule vrim = fpsInput.gameObject.AddComponent<VRInputModule>();
-            //laserPointer.inputModule = vrim;
-            // Debug.Log($"Input Module before: {EventSystem.current.currentInputModule.name}");
-            // vrim.ActivateModule();
-            // vrim.eventCamera = laserPointer.eventCamera;
-            // fpsInput.enabled = false;
-            // Debug.Log($"Input Module after: {EventSystem.current.currentInputModule.name}");
-            yield break;
         }
 
     }
@@ -288,6 +298,8 @@ namespace SN1MC.Controls
         [HarmonyPostfix]
         public static void Postfix(uGUI_MainMenu __instance)
         {
+            // TODO: Those should not be needed, since we don't patch the game when not being in VR Mode
+            // Have to see if we want to be able to switch between motion controls on/off.
             if (!XRSettings.enabled || !VRCustomOptionsMenu.EnableMotionControls)
             {
                 return;
@@ -316,13 +328,14 @@ namespace SN1MC.Controls
             {
                 // TODO: Switch here if in UI mode?
                 // Can you cast from two cameras at the same time? Probably not :/
-                // Just switch like the overiiden method
+                // Just switch like the overiden method
                 var laserPointerCamera = VRCameraRig.instance.EventCamera;
                 __result = laserPointerCamera;
             }
         }
     }
 
+    // TODO: Not sure if this actually works, should not be needed :/
     [HarmonyPatch(typeof(ManagedCanvasUpdate), nameof(ManagedCanvasUpdate.GetUICamera))]
     public static class PatchCameraTrackingDisabled
     {
@@ -347,6 +360,15 @@ namespace SN1MC.Controls
 
             codes.RemoveRange(callIndex-2, 3);
             return codes.AsEnumerable();
+        }
+    }
+
+    // Makes the ingame menu spawn infront of you in vr
+    [HarmonyPatch(typeof(IngameMenu), nameof(IngameMenu.Awake))]
+    class MakeIngameMenuStatic {
+        public static void Postfix(IngameMenu __instance) {
+            var scalar = __instance.GetComponent<uGUI_CanvasScaler>();
+            scalar.vrMode = uGUI_CanvasScaler.Mode.Static;
         }
     }
 
