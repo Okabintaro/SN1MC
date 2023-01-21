@@ -129,7 +129,7 @@ namespace SN1MC.Controls
             parentConstraint = gameObject.AddComponent<ParentConstraint>();
             parentConstraint.constraintActive = false;
 
-            // CoroutineHost.StartCoroutine(DebugPositions());
+            // CoroutineHost.StartCoroutine(DebugCursorState());
         }
 
         private void SetupControllerModels()
@@ -226,12 +226,12 @@ namespace SN1MC.Controls
             yield break;
         }
 
-       public IEnumerator DebugPositions() {
+       public IEnumerator DebugCursorState() {
             while (true)
             {
                 try
                 {
-                    ErrorMessage.AddDebug($"uiCameraPos: {uiCamera.transform.position}");
+                    ErrorMessage.AddDebug($"Cursor: {Cursor.lockState}");
                 }
                 catch { }
                 yield return new WaitForSeconds(0.5f);
