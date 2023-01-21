@@ -1,7 +1,26 @@
-
 using HarmonyLib;
+using UnityEngine;
 
 namespace SN1MC.Controls
 {
-	extern alias SteamVRRef;
+
+	// To move the UI of Fabricators, Storage etc in front of the player, we have to set the uGUI_CanvasScaler dirty flag.
+	// That way in UpdateTransform.UpdateTransform() the UI will be set to be infront of the UI Camera when vrMode is set to static.
+	[HarmonyPatch(typeof(GUIHand), nameof(GUIHand.Send))]
+	class ResetStaticCanvasScalerOnInteract : MonoBehaviour {
+		public static void DirtyAllCanvases() {
+			// TODO: Should cache this maybe, not sure when those could change though
+			var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
+			foreach (var scaler in scalers)
+			{
+				scaler.SetDirty();
+			}
+		}
+
+		public static void Postfix(GameObject target, HandTargetEventType e, GUIHand hand) {
+			if (e == HandTargetEventType.Click) {
+				DirtyAllCanvases();
+			}
+		}
+	}
 }

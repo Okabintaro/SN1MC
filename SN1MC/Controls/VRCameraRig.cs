@@ -89,14 +89,15 @@ namespace SN1MC.Controls
 
 
         public void Start() {
-            // TODO: Naming is inconsistent
+            // TODO: Naming is inconsistent, clean this mess up, only need 1/2 pointers?
             leftController = new GameObject(nameof(leftController)).WithParent(transform);
             rightController = new GameObject(nameof(rightController)).WithParent(transform);
 
             laserPointer = new GameObject(nameof(laserPointer)).WithParent(rightController.transform).AddComponent<LaserPointerNew>();
             laserPointerLeft = new GameObject(nameof(laserPointerLeft)).WithParent(leftController.transform).AddComponent<LaserPointerNew>();
             laserPointerLeft.gameObject.SetActive(false);
-            laserPointer.gameObject.SetActive(false);
+            // laserPointer.gameObject.SetActive(false);
+            laserPointer.enabled = false;
 
             // NOTE: These laserpointer and controllers is NOT parented to the Rig, since they act in UI space, not world space
             uiRig = new GameObject(nameof(uiRig));
@@ -326,9 +327,6 @@ namespace SN1MC.Controls
             }
             if (VRCameraRig.instance != null)
             {
-                // TODO: Switch here if in UI mode?
-                // Can you cast from two cameras at the same time? Probably not :/
-                // Just switch like the overiden method
                 var laserPointerCamera = VRCameraRig.instance.EventCamera;
                 __result = laserPointerCamera;
             }

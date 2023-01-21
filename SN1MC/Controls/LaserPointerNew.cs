@@ -72,6 +72,11 @@ namespace SN1MC.Controls
             return Physics.Raycast(raycast, out hit, maxDistance, layerMask);
         }
 
+        private void Show(bool on) {
+            this.lineRenderer.enabled = on;
+            this.pointerDot.SetActive(on);
+        }
+
         void Update()
         {
             if (inputModule == null)
@@ -83,16 +88,22 @@ namespace SN1MC.Controls
             float length = defaultLength;
             if (hitDistance != 0)
             {
+                // We hit UI
+                Show(true);
                 length = hitDistance;
                 SteamVRInputManager.SwitchToUIBinding();
             }
             else if(doWorldRaycasts)
             {
+                // We hit something in the world
+                Show(false);
                 RaycastHit hit;
                 if (RayCastGameObjects(out hit)) {
                     length = hit.distance;
                 }
                 SteamVRInputManager.SwitchToGameBinding();
+            } else {
+                Show(false);
             }
             Vector3 endPos = transform.position + (transform.forward * length);
 
