@@ -28,6 +28,12 @@ namespace SN1MC.Controls
             obj.transform.parent = target.transform;
             return obj;
         }
+        public static GameObject ResetTransform(this GameObject obj)
+        {
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localRotation = Quaternion.identity;
+            return obj;
+        }
 
         public static ParentConstraint ParentTo(this ParentConstraint parentConstraint, Transform target, Vector3 translationOffset)
         {
@@ -52,10 +58,16 @@ namespace SN1MC.Controls
     }
 
     class VRCameraRig : MonoBehaviour {
-        // Setup and created in Awake()
+        // Setup and created in Start()
         public Camera vrCamera;
         public GameObject leftController;
         public GameObject rightController;
+        // Those are used for the IK/Hands
+        public GameObject leftHandTarget;
+        public GameObject rightHandTarget;
+
+        // TODO: Those should not be full laserpointers probably
+        // The only thing I need is cameras at different positions for the UI or Worldspace Raycasts
         public LaserPointerNew laserPointer;
         public LaserPointerNew laserPointerLeft;
 
@@ -73,14 +85,20 @@ namespace SN1MC.Controls
 
         public Camera uiCamera = null;
         public bool uiTrackHead = false;
+        public GameObject worldTarget;
+        public float worldTargetDistance;
 
-        public Camera EventCamera {
+        public Camera UIControllerCamera {
             get {
-                if (laserPointer == null) {
+                if (laserPointerUI == null) {
                     return null;
                 }
                 return laserPointerUI.eventCamera;
             }
+        }
+
+        public static Transform GetTargetTansform() {
+            return VRCameraRig.instance.laserPointer.transform;
         }
 
         public void ParentTo(Transform target) {
@@ -92,6 +110,12 @@ namespace SN1MC.Controls
             // TODO: Naming is inconsistent, clean this mess up, only need 1/2 pointers?
             leftController = new GameObject(nameof(leftController)).WithParent(transform);
             rightController = new GameObject(nameof(rightController)).WithParent(transform);
+
+            leftHandTarget = new GameObject(nameof(leftHandTarget)).WithParent(leftController);
+            rightHandTarget = new GameObject(nameof(rightHandTarget)).WithParent(rightController);
+            leftHandTarget.transform.localEulerAngles = new Vector3(270, 90, 0);
+            Vector3 handOffset = new Vector3(90, 270, 0);
+            rightHandTarget.transform.localEulerAngles = handOffset;
 
             laserPointer = new GameObject(nameof(laserPointer)).WithParent(rightController.transform).AddComponent<LaserPointerNew>();
             laserPointerLeft = new GameObject(nameof(laserPointerLeft)).WithParent(leftController.transform).AddComponent<LaserPointerNew>();
@@ -106,7 +130,7 @@ namespace SN1MC.Controls
             rightControllerUI = new GameObject(nameof(rightControllerUI)).WithParent(uiRig.transform);
             laserPointerUI = new GameObject(nameof(laserPointerUI)).WithParent(rightControllerUI.transform).AddComponent<LaserPointerNew>();
             // TODO: Constructors possible?
-            laserPointerUI.doWorldRaycasts = false;
+            laserPointerUI.doWorldRaycasts = true;
             laserPointerUI.useUILayer = true;
 
             var laserPointerAngle = new Vector3(45, 0, 0);
@@ -138,24 +162,20 @@ namespace SN1MC.Controls
 
             // Create two cubes to show controller positions
             // TODO: Replace with actual models from steamvr
-            // modelR = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            // modelR.transform.parent = rightController.transform;
-            // modelR.transform.localPosition.Set(0, 0, 0);
-            // modelR.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            // Object.Destroy(modelR.GetComponent<BoxCollider>());
+            modelR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            modelR.transform.parent = rightControllerUI.transform;
+            modelR.transform.localPosition.Set(0, 0, 0);
+            modelR.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+            Object.Destroy(modelR.GetComponent<BoxCollider>());
 
-            // modelL = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            // modelL.transform.parent = leftController.transform;
-            // modelL.transform.localPosition.Set(0, 0, 0);
-            // modelL.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            // Object.Destroy(modelL.GetComponent<BoxCollider>());
+            modelL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            modelL.transform.parent = leftControllerUI.transform;
+            modelL.transform.localPosition.Set(0, 0, 0);
+            modelL.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+            Object.Destroy(modelL.GetComponent<BoxCollider>());
 
-            modelRUI = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            modelRUI.transform.parent = rightControllerUI.transform;
-            modelRUI.transform.localPosition.Set(0, 0, 0);
-            modelRUI.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            modelRUI.layer = LayerID.UI;
-            Object.Destroy(modelRUI.GetComponent<BoxCollider>());
+            modelL.layer = LayerID.UI;
+            modelR.layer = LayerID.UI;
         }
 
         // This is used to get the camera from the main menu
@@ -190,13 +210,15 @@ namespace SN1MC.Controls
                 uiRig.transform.position = Vector3.zero;
                 var oldMask = camera.cullingMask;
                 var oldClear = camera.clearFlags;
+                var oldDepth = camera.depth;
 
                 camera.CopyFrom(SNCameraRoot.main.mainCamera);
                 camera.transform.localPosition = Vector3.zero;
                 camera.transform.localRotation = Quaternion.identity;
                 camera.renderingPath = RenderingPath.Forward;
                 camera.cullingMask = oldMask;
-                camera.clearFlags = oldClear;
+                camera.clearFlags = CameraClearFlags.Depth;
+                camera.depth = oldDepth;
 
                 // Set all canvas scalers to static, which makes UI better usable
                 var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
@@ -204,11 +226,6 @@ namespace SN1MC.Controls
                 {
                     scaler.vrMode = uGUI_CanvasScaler.Mode.Static;
                 }
-                foreach (var m in FindObjectsOfType<IngameMenu>())
-                {
-                    m.gameObject.GetComponent<uGUI_CanvasScaler>().vrMode = uGUI_CanvasScaler.Mode.Static;
-                }
-
             } else { 
                 camera.transform.parent = uiRig.transform;
                 camera.transform.localPosition = Vector3.zero;
@@ -218,16 +235,26 @@ namespace SN1MC.Controls
         }
 
         public IEnumerator SetupGameCameras() {
-            VRCameraRig.instance.StealCamera(SNCameraRoot.main.mainCamera);
+            var rig = VRCameraRig.instance;
+            rig.StealCamera(SNCameraRoot.main.mainCamera);
             yield return new WaitForSeconds(1.0f);
-            VRCameraRig.instance.UseUICamera(SNCameraRoot.main.guiCamera, true);
+            rig.UseUICamera(SNCameraRoot.main.guiCamera, true);
             yield return new WaitForSeconds(1.0f);
-            uGUI.main.screenCanvas.gameObject.AddComponent<ParentConstraint>().ParentTo(uiCamera.transform, Vector3.forward);
 
-            yield break;
+            var screenCanvas = uGUI.main.screenCanvas.gameObject;
+            screenCanvas.WithParent(uiCamera.transform).ResetTransform();
+            var clipCamera = FindObjectsOfType<Camera>().First(cam => cam.name == "Clip Camera");
+            clipCamera.gameObject.WithParent(vrCamera.transform).ResetTransform();
+
+            // Steal Reticle and attach to the right hand
+            var handReticle = HandReticle.main.gameObject.WithParent(rightControllerUI.transform);
+            handReticle.AddComponent<Canvas>().worldCamera = uiCamera;
+            handReticle.transform.localEulerAngles = new Vector3(90, 0, 0);
+            handReticle.transform.localPosition = new Vector3(0, 0, 0.05f);
+            handReticle.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
         }
 
-       public IEnumerator DebugCursorState() {
+        public IEnumerator DebugCursorState() {
             while (true)
             {
                 try
@@ -288,6 +315,12 @@ namespace SN1MC.Controls
             UpdateControllerPositions();
         }
 
+        public void SetWorldTarget(GameObject activeTarget, float activeHitDistance)
+        {
+            this.worldTarget = activeTarget;
+            this.worldTargetDistance = activeHitDistance;
+            this.laserPointerUI.SetWorldTarget(worldTarget, worldTargetDistance);
+        }
     }
 
     #region Patches
@@ -321,19 +354,63 @@ namespace SN1MC.Controls
     {
         public static void Postfix(ref Camera __result)
         {
-            if (!XRSettings.enabled || !VRCustomOptionsMenu.EnableMotionControls)
-            {
-                return;
-            }
+            // TODO: For scanner room probably have to distinguish between UI and WorldSpace Canvases
             if (VRCameraRig.instance != null)
             {
-                var laserPointerCamera = VRCameraRig.instance.EventCamera;
+                var laserPointerCamera = VRCameraRig.instance.UIControllerCamera;
                 __result = laserPointerCamera;
             }
         }
     }
 
-    // TODO: Not sure if this actually works, should not be needed :/
+    // Makes the ingame menu spawn infront of you in vr
+    [HarmonyPatch(typeof(IngameMenu), nameof(IngameMenu.Awake))]
+    class MakeIngameMenuStatic {
+        public static void Postfix(IngameMenu __instance) {
+            var scalar = __instance.GetComponent<uGUI_CanvasScaler>();
+            scalar.vrMode = uGUI_CanvasScaler.Mode.Static;
+        }
+    }
+
+
+    // TODO: Move/cleanup this
+    [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Start))]
+    public static class ArmsController_Start_Patch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(ArmsController __instance)
+        {
+            if (!XRSettings.enabled || !VRCustomOptionsMenu.EnableMotionControls)
+            {
+                return;
+            }
+            // TODO/DOING: Fixing this
+            Camera mainCamera = SNCameraRoot.main.mainCam;
+            VRCameraRig.instance.ParentTo(mainCamera.transform.parent);
+            VRCameraRig.instance.StealCamera(SNCameraRoot.main.mainCamera);
+            CoroutineHost.StartCoroutine(VRCameraRig.instance.SetupGameCameras());
+
+            // TODO: Have to trigger update somehow, e.g. toggling SteamVR Dashboard
+            //       Toggeling uGUI/ScreenCanvas on/off fixes it
+        }
+    }
+
+    // TODO: Move/cleanup this
+    [HarmonyPatch(typeof(GUIHand), nameof(GUIHand.UpdateActiveTarget))]
+    public static class GUIHandPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(GUIHand __instance)
+        {
+            var rig = VRCameraRig.instance;
+            if (rig == null) {
+                return;
+            }
+            rig.SetWorldTarget(__instance.activeTarget, __instance.activeHitDistance);
+        }
+    }
+
+    // Don't disable the the automatic camera tracking of the UI Camera in the Main Game
     [HarmonyPatch(typeof(ManagedCanvasUpdate), nameof(ManagedCanvasUpdate.GetUICamera))]
     public static class PatchCameraTrackingDisabled
     {
@@ -361,15 +438,5 @@ namespace SN1MC.Controls
         }
     }
 
-    // Makes the ingame menu spawn infront of you in vr
-    [HarmonyPatch(typeof(IngameMenu), nameof(IngameMenu.Awake))]
-    class MakeIngameMenuStatic {
-        public static void Postfix(IngameMenu __instance) {
-            var scalar = __instance.GetComponent<uGUI_CanvasScaler>();
-            scalar.vrMode = uGUI_CanvasScaler.Mode.Static;
-        }
-    }
-
     #endregion
-
 }

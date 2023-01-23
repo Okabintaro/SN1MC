@@ -12,12 +12,12 @@ namespace SN1MC.Controls
     [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.GetCursorScreenPosition))]
     class RaycastPointerPosition {
         public static void Postfix(ref Vector2 __result, FPSInputModule __instance) {
-            if (VRCameraRig.instance == null || VRCameraRig.instance.EventCamera == null) {
+            if (VRCameraRig.instance == null || VRCameraRig.instance.UIControllerCamera == null) {
                 return;
             }
 
             // TODO: Check if this could be better patched in the raycaster canvas
-            var eventCamera = VRCameraRig.instance.EventCamera;
+            var eventCamera = VRCameraRig.instance.UIControllerCamera;
             __result = new Vector2(eventCamera.pixelWidth / 2, eventCamera.pixelHeight / 2);
         }
     }

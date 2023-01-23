@@ -2,6 +2,8 @@ using HarmonyLib;
 using UnityEngine;
 using TMPro;
 
+// This behaves like ErrorMesage.Show(), but is designed to not spam with changing values
+// I used this to debug/view certain positions in the UI
 class DebugPanel : MonoBehaviour {
 
     TextMeshProUGUI entry;

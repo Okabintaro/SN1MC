@@ -19,6 +19,9 @@ namespace SN1MC.Controls
 
         public bool doWorldRaycasts = true;
         public bool useUILayer = false;
+        private GUIHand guiHand;
+        private GameObject worldTarget;
+        private float worldTargetDistance;
 
         void Start()
         {
@@ -61,20 +64,16 @@ namespace SN1MC.Controls
             pointerDot.transform.position = end;
         }
 
-        private bool RayCastGameObjects(out RaycastHit hit)
-        {
-            // TODO: Not sure if needed?
-            float maxDistance = inputModule.maxInteractionDistance;
-            Ray raycast = new Ray(transform.position, transform.forward);
-            var layerNames = new string[] { "SubRigidbodyExclude", "Interior", "TerrainCollider", "Trigger", "UI", "Useable", "Default" };
-            var layerMask = LayerMask.GetMask(layerNames);
-            // TODO: Use maxDistance
-            return Physics.Raycast(raycast, out hit, maxDistance, layerMask);
-        }
-
         private void Show(bool on) {
             this.lineRenderer.enabled = on;
             this.pointerDot.SetActive(on);
+        }
+
+        // TODO: This is out of scope, refactor/cleanup
+        public void SetWorldTarget(GameObject worldTarget, float worldTargetDistance)
+        {
+            this.worldTarget = worldTarget;
+            this.worldTargetDistance = worldTargetDistance;
         }
 
         void Update()
@@ -83,35 +82,29 @@ namespace SN1MC.Controls
             {
                 return;
             }
-            var hitDistance = inputModule.lastRaycastResult.distance;
+            var uiHitDistance = inputModule.lastRaycastResult.distance;
 
             float length = defaultLength;
-            if (hitDistance != 0)
+            if (uiHitDistance != 0)
             {
                 // We hit UI
                 Show(true);
-                length = hitDistance;
+                length = uiHitDistance;
                 SteamVRInputManager.SwitchToUIBinding();
-            }
-            else if(doWorldRaycasts)
-            {
-                // We hit something in the world
-                Show(false);
-                RaycastHit hit;
-                if (RayCastGameObjects(out hit)) {
-                    length = hit.distance;
-                }
+            } else if (this.worldTarget != null && doWorldRaycasts) {
+                Show(true);
+                length = this.worldTargetDistance;
                 SteamVRInputManager.SwitchToGameBinding();
             } else {
                 Show(false);
             }
+
             Vector3 endPos = transform.position + (transform.forward * length);
 
             lineRenderer.SetPosition(0, transform.position);
             lineRenderer.SetPosition(1, endPos);
             pointerDot.transform.position = endPos;
         }
-
     }
 }
 

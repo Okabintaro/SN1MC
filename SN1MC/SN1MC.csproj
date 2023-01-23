@@ -179,25 +179,28 @@
     <Compile Include="Controls\Binding.cs" />
     <Compile Include="Controls\CameraControl.cs" />
     <Compile Include="Controls\VRMainMenu.cs" />
-    <Compile Include="Controls\CraftingMenu.cs" />
-    <Compile Include="Controls\CustomTargeting.cs" />
+    <!-- <Compile Include="Controls\CraftingMenu.cs" /> -->
     <Compile Include="Controls\AimTransform.cs" />
-    <Compile Include="Controls\CustomUpdateMoveDirection.cs" />
     <!-- <Compile Include="Controls\FpsInput.cs" /> -->
     <Compile Include="Controls\FpsInputPatch.cs" />
     <!-- <Compile Include="Controls\HandGUI.cs" /> -->
     <Compile Include="Controls\GUIHandPatches.cs" />
     <Compile Include="Controls\InputGame.cs" />
-    <Compile Include="Controls\LaserPointerLeft.cs" />
     <Compile Include="Controls\VRCameraRig.cs" />
     <!-- <Compile Include="Controls\VRInputModule.cs" /> -->
     <Compile Include="Controls\LaserPointerNew.cs" />
+    <Compile Include="Controls\VRPlayer.cs" />
+    <Compile Include="Controls\TargetingPatches.cs" />
+
+<!--
     <Compile Include="Controls\ManagerScreenshot.cs" />
     <Compile Include="Controls\ManagerScreenShots.cs" />
     <Compile Include="Controls\OptionsMainMenu.cs" />
     <Compile Include="Controls\PlayerInputPatches.cs" />
-    <Compile Include="Controls\QuickSlotButtons.cs" />
     <Compile Include="Controls\SteamVRLaserPointer.cs" />
+    <Compile Include="Controls\CustomUpdateMoveDirection.cs" />
+    <Compile Include="Controls\LaserPointerLeft.cs" />
+    <Compile Include="Controls\CustomTargeting.cs" />
     <Compile Include="Controls\Tools\BuilderToolHandleInput.cs" />
     <Compile Include="Controls\Tools\Cannon.cs" />
     <Compile Include="Controls\Tools\CannonCustom.cs" />
@@ -213,7 +216,9 @@
     <Compile Include="Controls\Vehicles\SeaglideMap.cs" />
     <Compile Include="Controls\Vehicles\SeaMothMotion.cs" />
     <Compile Include="Controls\VRHandsController.cs" />
-    <!-- <Compile Include="Controls\VRMenuController.cs" /> -->
+    <Compile Include="Controls\VRMenuController.cs" />
+    <Compile Include="Controls\QuickSlotButtons.cs" />
+  -->
     <Compile Include="Controls\XRInputManager.cs" />
     <Compile Include="VRAnimationsFixer.cs" />
     <Compile Include="Main.cs" />
