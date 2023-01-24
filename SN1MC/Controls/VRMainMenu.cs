@@ -10,7 +10,7 @@ namespace SN1MC.Controls
         {
             Mod.logger.LogInfo("Patching Main Menu...");
             Camera uiCamera = FindObjectsOfType<Camera>().First(c => c.name.Equals("UI Camera"));
-            VRCameraRig.instance.UseUICamera(uiCamera);
+            VRCameraRig.instance.StealUICamera(uiCamera);
             Camera mainCamera = GameObject.FindGameObjectsWithTag("MainCamera").First(c => c.name.Equals("Main Camera")).GetComponent<Camera>();
             VRCameraRig.instance.StealCamera(mainCamera);
         }

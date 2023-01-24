@@ -17,7 +17,8 @@ namespace SN1MC.Controls
     extern alias SteamVRActions;
     extern alias SteamVRRef;
 
-    static class MyUtils {
+    static class MyUtils
+    {
         public static GameObject WithParent(this GameObject obj, Transform target)
         {
             obj.transform.parent = target;
@@ -57,7 +58,8 @@ namespace SN1MC.Controls
         }
     }
 
-    class VRCameraRig : MonoBehaviour {
+    class VRCameraRig : MonoBehaviour
+    {
         // Setup and created in Start()
         public Camera vrCamera;
         public GameObject leftController;
@@ -78,7 +80,6 @@ namespace SN1MC.Controls
 
         public GameObject modelL;
         public GameObject modelR;
-        public ParentConstraint parentConstraint;
 
         public static VRCameraRig instance;
         private GameObject modelRUI;
@@ -87,26 +88,46 @@ namespace SN1MC.Controls
         public bool uiTrackHead = false;
         public GameObject worldTarget;
         public float worldTargetDistance;
+        private Transform rigParentTarget;
 
-        public Camera UIControllerCamera {
-            get {
-                if (laserPointerUI == null) {
+        public Camera UIControllerCamera
+        {
+            get
+            {
+                if (laserPointerUI == null)
+                {
                     return null;
                 }
                 return laserPointerUI.eventCamera;
             }
         }
+        public Camera WorldControllerCamera
+        {
+            get
+            {
+                if (laserPointer == null)
+                {
+                    return null;
+                }
+                return laserPointer.eventCamera;
+            }
+        }
 
-        public static Transform GetTargetTansform() {
+
+        public static Transform GetTargetTansform()
+        {
             return VRCameraRig.instance.laserPointer.transform;
         }
 
-        public void ParentTo(Transform target) {
-            GetComponent<ParentConstraint>().ParentTo(target, Vector3.zero);
+        public void ParentTo(Transform target)
+        {
+            // GetComponent<ParentConstraint>().ParentTo(target, Vector3.zero);
+            this.rigParentTarget = target;
         }
 
 
-        public void Start() {
+        public void Start()
+        {
             // TODO: Naming is inconsistent, clean this mess up, only need 1/2 pointers?
             leftController = new GameObject(nameof(leftController)).WithParent(transform);
             rightController = new GameObject(nameof(rightController)).WithParent(transform);
@@ -117,11 +138,12 @@ namespace SN1MC.Controls
             Vector3 handOffset = new Vector3(90, 270, 0);
             rightHandTarget.transform.localEulerAngles = handOffset;
 
+            // Laser Pointer Setup
             laserPointer = new GameObject(nameof(laserPointer)).WithParent(rightController.transform).AddComponent<LaserPointerNew>();
             laserPointerLeft = new GameObject(nameof(laserPointerLeft)).WithParent(leftController.transform).AddComponent<LaserPointerNew>();
             laserPointerLeft.gameObject.SetActive(false);
             // laserPointer.gameObject.SetActive(false);
-            laserPointer.enabled = false;
+            laserPointer.disableAfterCreation = true;
 
             // NOTE: These laserpointer and controllers is NOT parented to the Rig, since they act in UI space, not world space
             uiRig = new GameObject(nameof(uiRig));
@@ -150,11 +172,6 @@ namespace SN1MC.Controls
             laserPointer.inputModule = fpsInput;
             laserPointerLeft.inputModule = fpsInput;
             laserPointerUI.inputModule = fpsInput;
-
-            parentConstraint = gameObject.AddComponent<ParentConstraint>();
-            parentConstraint.constraintActive = false;
-
-            // CoroutineHost.StartCoroutine(DebugCursorState());
         }
 
         private void SetupControllerModels()
@@ -181,10 +198,12 @@ namespace SN1MC.Controls
         // This is used to get the camera from the main menu
         // Main issue with making a new camera was the water surface but that should also be fixable
         // TODO: Maybe remove this, so we only have one common camera
-        public void StealCamera(Camera camera) {
+        public void StealCamera(Camera camera)
+        {
             // Destroy/Delete old camera
             // NOTE: Subnautica renderes the water using specific camera component which also renders when the camera is disabled
-            if (camera != vrCamera && vrCamera != null) {
+            if (camera != vrCamera && vrCamera != null)
+            {
                 vrCamera.enabled = false;
                 Destroy(vrCamera.gameObject);
             }
@@ -195,14 +214,16 @@ namespace SN1MC.Controls
             vrCamera.transform.parent = this.transform;
         }
 
-        public void UseUICamera(Camera camera, bool fromGame=false) {
+        public void StealUICamera(Camera camera, bool fromGame = false)
+        {
             uiRig.transform.SetPositionAndRotation(camera.transform.position, camera.transform.rotation);
             if (uiCamera != null)
             {
                 Destroy(uiCamera.gameObject);
             }
 
-            if(fromGame) {
+            if (fromGame)
+            {
                 // This fixes a weird issue I had, where the UI Camera from the game would behave like it wasnt moving
                 // even though the transform was changing properly.
                 // Maybe it is because the tracking was once disabled in the main game, but I am not sure, since I tried enabling it too.
@@ -220,13 +241,15 @@ namespace SN1MC.Controls
                 camera.clearFlags = CameraClearFlags.Depth;
                 camera.depth = oldDepth;
 
+                camera.transform.parent = uiRig.transform;
+                camera.transform.localPosition = Vector3.zero;
+                camera.transform.localRotation = Quaternion.identity;
+
                 // Set all canvas scalers to static, which makes UI better usable
-                var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
-                foreach (var scaler in scalers)
-                {
-                    scaler.vrMode = uGUI_CanvasScaler.Mode.Static;
-                }
-            } else { 
+                FindObjectsOfType<uGUI_CanvasScaler>().Where(obj => !obj.name.Contains("PDA")).ForEach(cs => cs.vrMode = uGUI_CanvasScaler.Mode.Static);
+            }
+            else
+            {
                 camera.transform.parent = uiRig.transform;
                 camera.transform.localPosition = Vector3.zero;
                 camera.transform.localRotation = Quaternion.identity;
@@ -234,11 +257,12 @@ namespace SN1MC.Controls
             uiCamera = camera;
         }
 
-        public IEnumerator SetupGameCameras() {
+        public IEnumerator SetupGameCameras()
+        {
             var rig = VRCameraRig.instance;
             rig.StealCamera(SNCameraRoot.main.mainCamera);
             yield return new WaitForSeconds(1.0f);
-            rig.UseUICamera(SNCameraRoot.main.guiCamera, true);
+            rig.StealUICamera(SNCameraRoot.main.guiCamera, true);
             yield return new WaitForSeconds(1.0f);
 
             var screenCanvas = uGUI.main.screenCanvas.gameObject;
@@ -254,19 +278,8 @@ namespace SN1MC.Controls
             handReticle.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
         }
 
-        public IEnumerator DebugCursorState() {
-            while (true)
-            {
-                try
-                {
-                    ErrorMessage.AddDebug($"Cursor: {Cursor.lockState}");
-                }
-                catch { }
-                yield return new WaitForSeconds(0.5f);
-            }
-        }
-
-        private void UpdateSteamVRControllers() {
+        private void UpdateSteamVRControllers()
+        {
             rightController.transform.localPosition = SteamVRInputManager.RightControllerPosition;
             leftController.transform.localPosition = SteamVRInputManager.LeftControllerPosition;
             rightController.transform.localRotation = SteamVRInputManager.RightControllerRotation;
@@ -286,8 +299,9 @@ namespace SN1MC.Controls
                 leftController.transform.localRotation = Quaternion.Lerp(leftController.transform.localRotation, SteamVRInputManager.LeftControllerRotation, VRCustomOptionsMenu.ikSmoothing);
             }
         }
-        
-        private void UpdateXRControllers() {
+
+        private void UpdateXRControllers()
+        {
             //ErrorMessage.AddDebug("Track: " + SN1MC.vrSystem.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseStanding, 0, allPoses));
             XRInputManager.GetXRInputManager().rightController.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 rightPos);
             XRInputManager.GetXRInputManager().rightController.TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion rightRot);
@@ -311,10 +325,18 @@ namespace SN1MC.Controls
             }
         }
 
-        public void Update() {
+        public void Update()
+        {
+            // Move the camera rig to the player each frame and rotate the uiRig accordingly
+            if (rigParentTarget != null)
+            {
+                this.transform.SetPositionAndRotation(rigParentTarget.position, rigParentTarget.rotation);
+                uiRig.transform.rotation = transform.rotation;
+            }
             UpdateControllerPositions();
         }
 
+        // Gets set by GUIHand Patch, which already does world raycasting so we dont have to do it ourselfs
         public void SetWorldTarget(GameObject activeTarget, float activeHitDistance)
         {
             this.worldTarget = activeTarget;
@@ -347,33 +369,73 @@ namespace SN1MC.Controls
     }
 
     // Make the uGUI_GraphicRaycaster take the LaserPointers EventCamera when possible
-    // TODO: More descriptive
+    // Have to switch between guiCameraSpace and Worldspace for e.g. Scanner Room and Cyclops UI
     [HarmonyPatch(typeof(uGUI_GraphicRaycaster))]
     [HarmonyPatch(nameof(uGUI_GraphicRaycaster.eventCamera), MethodType.Getter)]
     class uGUI_GraphicRaycaster_VREventCamera_Patch
     {
-        public static void Postfix(ref Camera __result)
+        public static bool Prefix(uGUI_GraphicRaycaster __instance, ref Camera __result)
         {
-            // TODO: For scanner room probably have to distinguish between UI and WorldSpace Canvases
-            if (VRCameraRig.instance != null)
+            if (VRCameraRig.instance == null)
             {
-                var laserPointerCamera = VRCameraRig.instance.UIControllerCamera;
-                __result = laserPointerCamera;
+                return true;
             }
+            if (!(SNCameraRoot.main != null))
+            {
+                __result = VRCameraRig.instance.UIControllerCamera;
+            }
+            else
+            {
+                if (__instance.guiCameraSpace)
+                {
+                    __result = VRCameraRig.instance.UIControllerCamera;
+                }
+                else
+                {
+                    __result = VRCameraRig.instance.WorldControllerCamera;
+                }
+            }
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_CanvasScaler), nameof(uGUI_CanvasScaler.UpdateTransform))]
+    static class uGUI_CanvasScalerPDA_Attach
+    {
+        public static void Postfix(uGUI_CanvasScaler __instance)
+        {
+            // TODO: There gotta be a better way to attach this only to the PDA, maybe custom behaviour, disabling the Scalar?
+            if (__instance.gameObject.GetComponent<uGUI_PDA>() == null)
+            {
+                return;
+            }
+            if (VRCameraRig.instance == null)
+                return;
+            var rigWorldPos = SNCameraRoot.main.transform;
+
+            var worldPos = __instance._anchor.transform.position;
+            var worldRot = __instance._anchor.transform.rotation;
+            var uiSpacePos = worldPos - rigWorldPos.position;
+            var uiSpaceRotation = worldRot;
+            // DebugPanel.Show($"PDA Pos/Rot: {worldPos}/{worldRot.eulerAngles}\n -> {uiSpacePos}/{uiSpaceRotation.eulerAngles}\nrigPos/rot: {rigWorldPos.position}, {rigWorldPos.eulerAngles}");
+            __instance.rectTransform.position = uiSpacePos;
+            __instance.rectTransform.rotation = uiSpaceRotation;
         }
     }
 
     // Makes the ingame menu spawn infront of you in vr
     [HarmonyPatch(typeof(IngameMenu), nameof(IngameMenu.Awake))]
-    class MakeIngameMenuStatic {
-        public static void Postfix(IngameMenu __instance) {
+    class MakeIngameMenuStatic
+    {
+        public static void Postfix(IngameMenu __instance)
+        {
             var scalar = __instance.GetComponent<uGUI_CanvasScaler>();
             scalar.vrMode = uGUI_CanvasScaler.Mode.Static;
         }
     }
 
 
-    // TODO: Move/cleanup this
+    // Create the VRCameraRig when ArmsController is started
     [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Start))]
     public static class ArmsController_Start_Patch
     {
@@ -389,13 +451,10 @@ namespace SN1MC.Controls
             VRCameraRig.instance.ParentTo(mainCamera.transform.parent);
             VRCameraRig.instance.StealCamera(SNCameraRoot.main.mainCamera);
             CoroutineHost.StartCoroutine(VRCameraRig.instance.SetupGameCameras());
-
-            // TODO: Have to trigger update somehow, e.g. toggling SteamVR Dashboard
-            //       Toggeling uGUI/ScreenCanvas on/off fixes it
         }
     }
 
-    // TODO: Move/cleanup this
+    // Get the current raycast world target from GUIHand to use for the laserpointer on right hand
     [HarmonyPatch(typeof(GUIHand), nameof(GUIHand.UpdateActiveTarget))]
     public static class GUIHandPatch
     {
@@ -403,14 +462,17 @@ namespace SN1MC.Controls
         public static void Postfix(GUIHand __instance)
         {
             var rig = VRCameraRig.instance;
-            if (rig == null) {
+            if (rig == null)
+            {
                 return;
             }
             rig.SetWorldTarget(__instance.activeTarget, __instance.activeHitDistance);
         }
     }
 
+
     // Don't disable the the automatic camera tracking of the UI Camera in the Main Game
+    // TODO: Cleanup/rewrite using CodeMatcher
     [HarmonyPatch(typeof(ManagedCanvasUpdate), nameof(ManagedCanvasUpdate.GetUICamera))]
     public static class PatchCameraTrackingDisabled
     {
@@ -421,19 +483,21 @@ namespace SN1MC.Controls
             bool found = false;
             foreach (var code in codes)
             {
-                if (code.Calls(typeof(XRDevice).GetMethod(nameof(XRDevice.DisableAutoXRCameraTracking)))) {
+                if (code.Calls(typeof(XRDevice).GetMethod(nameof(XRDevice.DisableAutoXRCameraTracking))))
+                {
                     found = true;
                     break;
                 }
                 callIndex++;
             }
 
-            if (!found) {
+            if (!found)
+            {
                 throw new System.Exception("Could not find call to patch");
 
             }
 
-            codes.RemoveRange(callIndex-2, 3);
+            codes.RemoveRange(callIndex - 2, 3);
             return codes.AsEnumerable();
         }
     }

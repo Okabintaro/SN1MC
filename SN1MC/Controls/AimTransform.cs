@@ -20,6 +20,7 @@ namespace SN1MC.Controls.UI
 		}
 
 
+		// TODO: This should not be needed, doesn't do much anyways
 		[HarmonyPatch(typeof(VRInitialization), nameof(VRInitialization.InitializeSteamVR))]
 		public static class VRInitialization_InitializeSteamVR__Patch
 		{

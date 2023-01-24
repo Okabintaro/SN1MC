@@ -1,17 +1,12 @@
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.Animations;
-using UnityEngine.XR;
 using System.Collections;
-using UWE;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using RootMotion.FinalIK;
 
 namespace SN1MC.Controls
 {
-    class VRPlayer : MonoBehaviour {
+    class VRHands : MonoBehaviour {
         public FullBodyBipedIK ik = null;
 
         public Transform leftTarget;
@@ -25,9 +20,9 @@ namespace SN1MC.Controls
         private Vector3 leftElbowOffset;
         private Vector3 rightElbowOffset;
 
-        public static VRPlayer instance;
+        public static VRHands instance;
 
-        public void SetIK(FullBodyBipedIK ik) {
+        public void Setup(FullBodyBipedIK ik) {
             this.ik = ik;
             leftHand = ik.solver.leftHandEffector.bone;
             rightHand = ik.solver.rightHandEffector.bone;
@@ -42,13 +37,8 @@ namespace SN1MC.Controls
 
             leftElbowOffset = leftElbow.transform.position - leftHand.transform.position;
             rightElbowOffset = rightElbow.transform.position - rightHand.transform.position;
-            ResetHandTargets();
-            // Extend globes BoundingBox to fight culling
-            FindObjectsOfType<SkinnedMeshRenderer>().Where(m => m.name.Contains("gloves_geo") || m.name.Contains("hands_geo")).ForEach(
-                mr => { mr.localBounds = new Bounds(Vector3.zero, new Vector3(2.0f, 2.0f, 2.0f));
-                }
-            );
 
+            ResetHandTargets();
             StartCoroutine(DisableBodyRendering());
             instance = this;
         }
@@ -60,11 +50,9 @@ namespace SN1MC.Controls
             rightTarget.localEulerAngles = new Vector3(0.0f, 180.0f, 270.0f);
         }
         
-        // TODO: Hook those
         public void OnOpenPDA() {
             leftTarget.localPosition = new Vector3(-0.05f, 0.0418f, -0.14f);
             leftTarget.localEulerAngles = new Vector3(305.1264f, 354.6509f, 99.6091f);
-            ResetHandTargets();
         }
         public void OnClosePDA() {
             ResetHandTargets();
@@ -95,16 +83,21 @@ namespace SN1MC.Controls
 
         }
 
-
-        // TODO: Proper patch/fix
+        // TODO: Proper patch/fix, this doesnt need to run each 2 seconds
         IEnumerator DisableBodyRendering() {
             while(true) {
+            // Extend globes BoundingBox to fight culling
+                transform.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true).Where(m => m.name.Contains("glove") || m.name.Contains("hands")).ForEach(
+                mr => { 
+                    var newBounds = new Bounds(Vector3.zero, new Vector3(3.0f, 3.0f, 3.0f));
+                    mr.localBounds = newBounds;
+                    mr.allowOcclusionWhenDynamic = false;
+                });
                 // Disable body rendering
-                var bodyRenderers = transform.GetComponentsInChildren<SkinnedMeshRenderer>().Where(renderer => renderer.name.Contains("body"));
+                var bodyRenderers = transform.GetComponentsInChildren<SkinnedMeshRenderer>().Where(r => r.name.Contains("body") || r.name.Contains("vest"));
                 bodyRenderers.ForEach(r => r.enabled = false);
                 yield return new WaitForSeconds(2.0f);
             }
-            yield break;
         }
 
     }
@@ -125,7 +118,7 @@ namespace SN1MC.Controls
             __instance.rightAim.aimer.enabled = false;
 
             // Attach
-            __instance.gameObject.AddComponent<VRPlayer>().SetIK(__instance.ik);
+            __instance.gameObject.AddComponent<VRHands>().Setup(__instance.ik);
             // __instance.pda.ui.canvasScaler.vrMode = uGUI_CanvasScaler.Mode.Inversed;
         }
     }
@@ -149,6 +142,25 @@ namespace SN1MC.Controls
         public static bool Prefix(ArmsController __instance)
         {
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PDA), nameof(PDA.Open))]
+    public static class SetPDAHandOffsets
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            VRHands.instance.OnOpenPDA();
+        }
+    }
+    [HarmonyPatch(typeof(PDA), nameof(PDA.Close))]
+    public static class UnsetPDAHandOffsets
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            VRHands.instance.OnClosePDA();
         }
     }
 

@@ -19,9 +19,10 @@ namespace SN1MC.Controls
 
         public bool doWorldRaycasts = true;
         public bool useUILayer = false;
-        private GUIHand guiHand;
         private GameObject worldTarget;
         private float worldTargetDistance;
+
+        public bool disableAfterCreation = false;
 
         void Start()
         {
@@ -40,7 +41,7 @@ namespace SN1MC.Controls
             pointerDot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             pointerDot.transform.localScale = new Vector3(0.03f, 0.03f, 0.03f);
             pointerDot.transform.parent = transform;
-            pointerDot.GetComponent<SphereCollider>().enabled = false;
+            Destroy(pointerDot.GetComponent<SphereCollider>());
             pointerDot.GetComponent<Renderer>().material = newMaterial;
 
             // Setup Line Renderer
@@ -54,6 +55,9 @@ namespace SN1MC.Controls
             if (useUILayer) {
                 pointerDot.layer = LayerMask.NameToLayer("UI");
                 lineRenderer.gameObject.layer = LayerMask.NameToLayer("UI");
+            }
+            if (disableAfterCreation) {
+                Show(false);
             }
         }
 
@@ -78,6 +82,11 @@ namespace SN1MC.Controls
 
         void Update()
         {
+            // I know this is shitty, gotta refactor this
+            if(disableAfterCreation) {
+                return;
+            }
+
             if (inputModule == null)
             {
                 return;
@@ -89,10 +98,12 @@ namespace SN1MC.Controls
             {
                 // We hit UI
                 Show(true);
+                pointerDot.SetActive(false);
                 length = uiHitDistance;
                 SteamVRInputManager.SwitchToUIBinding();
             } else if (this.worldTarget != null && doWorldRaycasts) {
                 Show(true);
+                pointerDot.SetActive(true);
                 length = this.worldTargetDistance;
                 SteamVRInputManager.SwitchToGameBinding();
             } else {
