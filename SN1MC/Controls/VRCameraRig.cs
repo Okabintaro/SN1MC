@@ -123,7 +123,7 @@ namespace SN1MC.Controls
 
         private Vector3 _targetAngle = TargetAngles.Default;
         private FPSInputModule fpsInput = null;
-        private bool trackRig;
+        private bool trackRig = true;
 
         public Vector3 TargetAngle
         {
@@ -574,27 +574,9 @@ namespace SN1MC.Controls
     {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var codes = new List<CodeInstruction>(instructions);
-            int callIndex = 0;
-            bool found = false;
-            foreach (var code in codes)
-            {
-                if (code.Calls(typeof(XRDevice).GetMethod(nameof(XRDevice.DisableAutoXRCameraTracking))))
-                {
-                    found = true;
-                    break;
-                }
-                callIndex++;
-            }
-
-            if (!found)
-            {
-                throw new System.Exception("Could not find call to patch");
-
-            }
-
-            codes.RemoveRange(callIndex - 2, 3);
-            return codes.AsEnumerable();
+            return new CodeMatcher(instructions).MatchForward(false, new CodeMatch[] {
+                new CodeMatch(ci => ci.Calls(typeof(XRDevice).GetMethod(nameof(XRDevice.DisableAutoXRCameraTracking))))
+            }).ThrowIfNotMatch("Could not find XRDevice Deactivation").Advance(-2).RemoveInstructions(3).InstructionEnumeration();
         }
     }
 
