@@ -6,7 +6,8 @@ using RootMotion.FinalIK;
 
 namespace SN1MC.Controls
 {
-    class VRHands : MonoBehaviour {
+    class VRHands : MonoBehaviour
+    {
         public FullBodyBipedIK ik = null;
 
         public Transform leftTarget;
@@ -22,7 +23,8 @@ namespace SN1MC.Controls
 
         public static VRHands instance;
 
-        public void Setup(FullBodyBipedIK ik) {
+        public void Setup(FullBodyBipedIK ik)
+        {
             this.ik = ik;
             leftHand = ik.solver.leftHandEffector.bone;
             rightHand = ik.solver.rightHandEffector.bone;
@@ -43,31 +45,38 @@ namespace SN1MC.Controls
             instance = this;
         }
 
-        public void ResetHandTargets() {
+        public void ResetHandTargets()
+        {
             leftTarget.localPosition = new Vector3(-0.05f, 0.1f, -0.1f);
             leftTarget.localEulerAngles = new Vector3(0.0f, 0.0f, 90.0f);
             rightTarget.localPosition = new Vector3(0.05f, 0.1f, -0.1f);
             rightTarget.localEulerAngles = new Vector3(0.0f, 180.0f, 270.0f);
         }
-        
-        public void OnOpenPDA() {
+
+        public void OnOpenPDA()
+        {
             leftTarget.localPosition = new Vector3(-0.05f, 0.0418f, -0.14f);
             leftTarget.localEulerAngles = new Vector3(305.1264f, 354.6509f, 99.6091f);
         }
-        public void OnClosePDA() {
+        public void OnClosePDA()
+        {
             ResetHandTargets();
         }
 
-        void Update() {
-            if (ik.enabled) {
+        void Update()
+        {
+            if (ik.enabled)
+            {
                 ik.solver.leftHandEffector.target = leftTarget;
                 ik.solver.rightHandEffector.target = rightTarget;
             }
         }
 
-        void LateUpdate() {
+        void LateUpdate()
+        {
             // Hand/controller tracking without IK
-            if (this.ik.enabled) {
+            if (this.ik.enabled)
+            {
                 return;
             }
             var cElbow = VRCameraRig.instance;
@@ -84,11 +93,14 @@ namespace SN1MC.Controls
         }
 
         // TODO: Proper patch/fix, this doesnt need to run each 2 seconds
-        IEnumerator DisableBodyRendering() {
-            while(true) {
-            // Extend globes BoundingBox to fight culling
+        IEnumerator DisableBodyRendering()
+        {
+            while (true)
+            {
+                // Extend globes BoundingBox to fight culling
                 transform.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true).Where(m => m.name.Contains("glove") || m.name.Contains("hands")).ForEach(
-                mr => { 
+                mr =>
+                {
                     var newBounds = new Bounds(Vector3.zero, new Vector3(3.0f, 3.0f, 3.0f));
                     mr.localBounds = newBounds;
                     mr.allowOcclusionWhenDynamic = false;
@@ -123,16 +135,31 @@ namespace SN1MC.Controls
         }
     }
 
-    // TODO: Write tooling to easily determine offsets foreach tool
-    //[HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Reconfigure))]
-    //public static class ReconfigureHandIK
-    //{
-    //    [HarmonyPostfix]
-    //    public static bool Prefix(ArmsController __instance, PlayerTool tool)
-    //    {
-    //        return false;
-    //    }
-    //}
+    // Reconfigure the aiming
+    [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Reconfigure))]
+    public static class ChangeAimAngleForTools
+    {
+        [HarmonyPostfix]
+        public static void Postfix(PlayerTool tool)
+        {
+            var rig = VRCameraRig.instance;
+            // TODO: See if we maybe can use switch Expressions from c# 9?
+            switch (tool)
+            {
+                case ScannerTool _:
+                case StasisRifle _:
+                case RepulsionCannon _:
+                case LaserCutter _:
+                case Welder _:
+                    rig.TargetAngle = TargetAngles.Forward;
+                    break;
+                // TODO: Add other tools
+                default:
+                    rig.TargetAngle = TargetAngles.Default;
+                    break;
+            }
+        }
+    }
 
     // This removes the animation that inspects the object/tool when equipped for the first time
     [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.StartInspectObjectAsync))]

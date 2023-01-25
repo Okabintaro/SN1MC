@@ -2,6 +2,8 @@
 using UnityEngine;
 using HarmonyLib;
 using UnityEngine.XR;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 
 namespace SN1MC.Controls
 {
@@ -22,9 +24,9 @@ namespace SN1MC.Controls
         }
     }
 
-   [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.ShouldStartDrag))]
    // Since we do the dragging/raycasting in worldspace now the drag threshold has to be way lower.
    // Can't change the EventSystem.pixelThreshold because that is only integer.
+   [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.ShouldStartDrag))]
    class SetDragThresholdHacky {
        public static bool Prefix(ref bool __result, Vector2 pressPos, Vector2 currentPos, float threshold, bool useDragThreshold) {
            // TODO: This has to be dependent on canvas scale, way to high for big pda, too low for small pda
@@ -34,12 +36,56 @@ namespace SN1MC.Controls
       }
    }
 
-    // Instead of saving the screen space position of the pointer, we save
+    // Instead of saving the screen space position of the pointer, we save the world space one. Needed to fix things like drag & drop.
     [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.UpdateMouseState))]
-    class UseWorldSpacePointerPosition {
+    static class UseWorldSpacePointerPosition {
         public static void Prefix(FPSInputModule __instance, PointerEventData leftData) {
             leftData.position = __instance.lastRaycastResult.worldPosition;
        }
+    }
+
+
+#if false
+    // Makes it so that you can still interact with the UI, even when the Game is not focused, which only makes sense in VR I guess.
+    // TODO: This is broken. Learn how this works, probably have to shift all the labels too somehow :/
+    [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.OnUpdate))]
+    [HarmonyDebug]
+    static class ContinueOnLostFocus {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var getter = AccessTools.DeclaredPropertyGetter(typeof(BaseInputModule), "eventSystem");
+            Mod.logger.LogInfo($"Getter: {getter}");
+            // instructions.ForEach(ins => {
+                // Mod.logger.LogInfo($"   : {ins}");
+            // });
+            var m = new CodeMatcher(instructions);
+            var mc = m.Clone();
+
+            var patched = m.MatchForward(false, new CodeMatch[] {
+                // /* 0x00128725 286616000A   */ IL_0001: call      instance class [UnityEngine.UI]UnityEngine.EventSystems.EventSystem [UnityEngine.UI]UnityEngine.EventSystems.BaseInputModule::get_eventSystem()
+                // /* 0x0012872A 6F6716000A   */ IL_0006: callvirt  instance bool [UnityEngine.UI]UnityEngine.EventSystems.EventSystem::get_isFocused()
+                // /* 0x0012872F 2D01         */ IL_000B: brtrue.s  IL_000E
+                // /* 0x00128731 2A           */ IL_000D: ret
+                new CodeMatch(OpCodes.Call),
+                new CodeMatch(OpCodes.Callvirt),
+                new CodeMatch(OpCodes.Brtrue),
+                new CodeMatch(OpCodes.Ret),
+            }).ThrowIfInvalid("Could not find target").RemoveInstructions(4);
+            // }).ThrowIfInvalid("Could not find target").SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Ldc_I4_1); 
+
+            return patched.InstructionEnumeration();
+        }
+    }
+#endif
+
+    // TODO: Not sure if needed. Is the GamepadInputModule used?
+    // Wonder if it actually conflicts with the FPSInputModule or not
+    [HarmonyPatch(typeof(GamepadInputModule), nameof(GamepadInputModule.IsInputAllowed))]
+    static class AllowGamepadUnfocused {
+        public static bool Prefix(ref bool __result) {
+            __result = !WaitScreen.IsWaiting; // && Application.isFocused;
+            return false;
+        }
     }
 
 #if false

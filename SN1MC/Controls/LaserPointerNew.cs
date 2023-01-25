@@ -91,17 +91,20 @@ namespace SN1MC.Controls
             {
                 return;
             }
+            var uiHitRelativeTime = Time.unscaledTime - inputModule.lastValidRaycastTime;
             var uiHitDistance = inputModule.lastRaycastResult.distance;
+            var uiWasHit = uiHitDistance != 0 && uiHitRelativeTime < 0.5f; 
 
             float length = defaultLength;
-            if (uiHitDistance != 0)
+            if (uiWasHit)
             {
                 // We hit UI
                 Show(true);
                 pointerDot.SetActive(false);
                 length = uiHitDistance;
                 SteamVRInputManager.SwitchToUIBinding();
-            } else if (this.worldTarget != null && doWorldRaycasts) {
+                // TODO: Hide World Laserpointer similar to UI one after a timeout
+            } else if (doWorldRaycasts && this.worldTarget != null) {
                 Show(true);
                 pointerDot.SetActive(true);
                 length = this.worldTargetDistance;

@@ -10,11 +10,7 @@ namespace SN1MC.Controls
 	class ResetStaticCanvasScalerOnInteract : MonoBehaviour {
 		public static void DirtyAllCanvases() {
 			// TODO: Should cache this maybe, not sure when those could change though
-			var scalers = FindObjectsOfType<uGUI_CanvasScaler>();
-			foreach (var scaler in scalers)
-			{
-				scaler.SetDirty();
-			}
+            FindObjectsOfType<uGUI_CanvasScaler>().ForEach(cs => cs.SetDirty());
 		}
 
 		public static void Postfix(GameObject target, HandTargetEventType e, GUIHand hand) {

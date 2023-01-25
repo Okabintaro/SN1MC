@@ -26,6 +26,7 @@ namespace SN1MC
 		public static bool EnableVRPiloting = true;
 		public static bool CyclopsPilot = true;
 		public static bool enableHandsWithoutTools = false;
+		public static bool DebugEnabled = false;
 
 		[HarmonyPatch(typeof(uGUI_OptionsPanel), nameof(uGUI_OptionsPanel.AddTabs))]
 		class SubtitlesPosition_Patch
@@ -53,6 +54,7 @@ namespace SN1MC
 				EnableVRPiloting = serializer.Serialize("VR/EnableVRPiloting", EnableVRPiloting);
 				CyclopsPilot = serializer.Serialize("VR/CyclopsPilot", CyclopsPilot);
 				enableHandsWithoutTools = serializer.Serialize("VR/EnableHandsWithoutTools", enableHandsWithoutTools);
+				DebugEnabled = serializer.Serialize("VR/DebugEnabled", DebugEnabled);
 				return false;
 			}
 		}
@@ -62,6 +64,8 @@ namespace SN1MC
 		{
 			//ShowHideMenus();
 			tabIndex = optionsPanel.AddTab("VR Options");
+
+			optionsPanel.AddToggleOption(tabIndex, "Debug Mode", DebugEnabled, (bool v) => DebugEnabled = v, "Enable Debug Mode, Drawing Controllers and displaying messages.");
 
 			optionsPanel.AddHeading(tabIndex, ColorString("Motion Control Options", headerColor));
 			optionsPanel.AddToggleOption(tabIndex, "Motion Controls Toggle", EnableMotionControls, delegate (bool v)

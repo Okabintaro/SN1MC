@@ -1,12 +1,14 @@
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.UI;
 using UnityEngine.XR;
 using System.Collections;
 using UWE;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using UnityEngine.EventSystems;
 
 
 /*
@@ -16,6 +18,12 @@ namespace SN1MC.Controls
 {
     extern alias SteamVRActions;
     extern alias SteamVRRef;
+
+    static class TargetAngles {
+        public static readonly Vector3 Default = new Vector3(45, 0, 0);
+        public static readonly Vector3 Forward = new Vector3(90, 0, 0);
+        public static readonly Vector3 Up = new Vector3(0, 0, 0);
+    }
 
     static class MyUtils
     {
@@ -113,9 +121,37 @@ namespace SN1MC.Controls
             }
         }
 
+        private Vector3 _targetAngle = TargetAngles.Default;
+        private FPSInputModule fpsInput = null;
+        private bool trackRig;
+
+        public Vector3 TargetAngle
+        {
+            get {
+                return _targetAngle;
+            }
+            set {
+                _targetAngle = value;
+                laserPointerUI.transform.localEulerAngles = value;
+                laserPointerLeft.transform.localEulerAngles = value;
+                laserPointer.transform.localEulerAngles = value;
+            }
+        }
+        public bool cinematicMode { set {
+            if (value) {
+                Invoke(nameof(this.DisableTracking), 0.1f);
+            } else {
+                this.trackRig = true;
+            }
+        } }
+
+        protected void DisableTracking() {
+            trackRig = false;
+        }
 
         public static Transform GetTargetTansform()
         {
+            // TODO: Switch depending on tool
             return VRCameraRig.instance.laserPointer.transform;
         }
 
@@ -154,11 +190,7 @@ namespace SN1MC.Controls
             // TODO: Constructors possible?
             laserPointerUI.doWorldRaycasts = true;
             laserPointerUI.useUILayer = true;
-
-            var laserPointerAngle = new Vector3(45, 0, 0);
-            laserPointerUI.transform.localEulerAngles = laserPointerAngle;
-            laserPointerLeft.transform.localEulerAngles = laserPointerAngle;
-            laserPointer.transform.localEulerAngles = laserPointerAngle;
+            this.TargetAngle = TargetAngles.Default;
 
             // TODO: Probably can get rid of this
             vrCamera = new GameObject(nameof(vrCamera)).WithParent(transform).AddComponent<Camera>();
@@ -168,7 +200,7 @@ namespace SN1MC.Controls
 
             // Connect Input module and layer pointer together
             // TODO: This should be easier using singleton setup
-            FPSInputModule fpsInput = FindObjectOfType<FPSInputModule>();
+            fpsInput = FindObjectOfType<FPSInputModule>();
             laserPointer.inputModule = fpsInput;
             laserPointerLeft.inputModule = fpsInput;
             laserPointerUI.inputModule = fpsInput;
@@ -176,7 +208,6 @@ namespace SN1MC.Controls
 
         private void SetupControllerModels()
         {
-
             // Create two cubes to show controller positions
             // TODO: Replace with actual models from steamvr
             modelR = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -193,6 +224,8 @@ namespace SN1MC.Controls
 
             modelL.layer = LayerID.UI;
             modelR.layer = LayerID.UI;
+            modelR.GetComponent<MeshRenderer>().enabled = VRCustomOptionsMenu.DebugEnabled;
+            modelL.GetComponent<MeshRenderer>().enabled = VRCustomOptionsMenu.DebugEnabled;
         }
 
         // This is used to get the camera from the main menu
@@ -276,6 +309,7 @@ namespace SN1MC.Controls
             handReticle.transform.localEulerAngles = new Vector3(90, 0, 0);
             handReticle.transform.localPosition = new Vector3(0, 0, 0.05f);
             handReticle.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+            FindObjectsOfType<uGUI_CanvasScaler>().ForEach(cs => cs.SetDirty());
         }
 
         private void UpdateSteamVRControllers()
@@ -330,10 +364,17 @@ namespace SN1MC.Controls
             // Move the camera rig to the player each frame and rotate the uiRig accordingly
             if (rigParentTarget != null)
             {
-                this.transform.SetPositionAndRotation(rigParentTarget.position, rigParentTarget.rotation);
+                if (trackRig) {
+                    this.transform.SetPositionAndRotation(rigParentTarget.position, rigParentTarget.rotation);
+                }
                 uiRig.transform.rotation = transform.rotation;
             }
             UpdateControllerPositions();
+
+            if (VRCustomOptionsMenu.DebugEnabled) {
+                RaycastResult? uiTarget = fpsInput?.lastRaycastResult;
+                DebugPanel.Show($"World Target: {worldTarget?.name}({worldTargetDistance})\nUI Target:{uiTarget?.gameObject?.name}({uiTarget?.distance})\nFocused: {EventSystem.current.isFocused}");
+            }
         }
 
         // Gets set by GUIHand Patch, which already does world raycasting so we dont have to do it ourselfs
@@ -348,19 +389,24 @@ namespace SN1MC.Controls
     #region Patches
 
     // There might be a better hook for this
+    [HarmonyPatch(typeof(MainCameraControl))]
+    [HarmonyPatch(nameof(MainCameraControl.cinematicMode), MethodType.Setter)]
+    public static class HandleCinematicMode
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool value)
+        {
+            VRCameraRig.instance.cinematicMode = value;
+        }
+    }
+
+    // There might be a better hook for this
     [HarmonyPatch(typeof(uGUI), nameof(uGUI.Awake))]
     public static class uGUI_AwakeSetupRig
     {
         [HarmonyPostfix]
         public static void Postfix(uGUI_MainMenu __instance)
         {
-            // TODO: Those should not be needed, since we don't patch the game when not being in VR Mode
-            // Have to see if we want to be able to switch between motion controls on/off.
-            if (!XRSettings.enabled || !VRCustomOptionsMenu.EnableMotionControls)
-            {
-                return;
-            }
-
             // TODO: Should use proper singleton pattern?
             var rig = new GameObject(nameof(VRCameraRig)).AddComponent<VRCameraRig>();
             VRCameraRig.instance = rig;
@@ -395,6 +441,33 @@ namespace SN1MC.Controls
                     __result = VRCameraRig.instance.WorldControllerCamera;
                 }
             }
+            return false;
+        }
+    }
+
+    // Same Patch as above but for the UnityEngine GraphicRaycaster
+    // Turns out some canvases like the left panel on the cyclops don't use the uGUI_GraphicRaycaster
+    // TODO: They seem to be in world space only though, have to double check.
+    [HarmonyPatch(typeof(GraphicRaycaster))]
+    [HarmonyPatch(nameof(GraphicRaycaster.eventCamera), MethodType.Getter)]
+    class Unity_GraphicRaycaster_VREventCamera_Patch
+    {
+        public static bool Prefix(GraphicRaycaster __instance, ref Camera __result)
+        {
+            // TODO: Clean this up
+            var canvas = __instance.GetComponent<Canvas>();
+            if (canvas == null) {
+                return true;
+            }
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay || (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null))
+            {
+                return true;
+            }
+            if (VRCameraRig.instance == null)
+            {
+                return true;
+            }
+            __result = VRCameraRig.instance.WorldControllerCamera;
             return false;
         }
     }
@@ -434,6 +507,29 @@ namespace SN1MC.Controls
         }
     }
 
+    // Makes the builder menu spawn infront of you in vr
+    // TODO: Could make those more general patches?
+    [HarmonyPatch(typeof(uGUI_BuilderMenu), nameof(uGUI_BuilderMenu.Awake))]
+    class MakeBuilderMenuStatic
+    {
+        public static void Postfix(uGUI_BuilderMenu __instance)
+        {
+            var scalar = __instance.GetComponent<uGUI_CanvasScaler>();
+            scalar.vrMode = uGUI_CanvasScaler.Mode.Static;
+        }
+    }
+    // Makes the builder menu spawn infront of you in vr
+    [HarmonyPatch(typeof(uGUI_BuilderMenu), nameof(uGUI_BuilderMenu.Open))]
+    class MakeBuilderMenuStatic2
+    {
+        public static void Postfix(uGUI_BuilderMenu __instance)
+        {
+            var scalar = __instance.GetComponent<uGUI_CanvasScaler>();
+            scalar.SetDirty();
+            // TODO: Look into the dirty a bit more. Why does it work for Fabricators?
+            scalar.UpdateTransform(SNCameraRoot.main.guiCamera);
+        }
+    }
 
     // Create the VRCameraRig when ArmsController is started
     [HarmonyPatch(typeof(ArmsController), nameof(ArmsController.Start))]

@@ -10,6 +10,7 @@ namespace SN1MC.Controls
 {
 
     // This replaces the main camera transform in `Targeting` with the event camera from `VRCameraRig`
+    // TODO: Rewrite with CodeMatcher
     [HarmonyPatch(typeof(Targeting), nameof(Targeting.GetTarget))]
     [HarmonyPatch(new Type[] { typeof(float), typeof(GameObject), typeof(float) }, new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out, ArgumentType.Out })]
     public static class WorldTargetingWithController

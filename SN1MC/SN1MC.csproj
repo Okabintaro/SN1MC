@@ -184,6 +184,7 @@
     <Compile Include="Controls\LaserPointerNew.cs" />
     <Compile Include="Controls\VRHands.cs" />
     <Compile Include="Controls\TargetingPatches.cs" />
+    <Compile Include="Controls\RecenterInVehicles.cs" />
 
 <!-- Those are mostly unneded or should be reimplemented. -->
 <!--
