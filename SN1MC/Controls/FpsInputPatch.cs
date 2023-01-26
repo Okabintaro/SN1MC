@@ -45,9 +45,7 @@ namespace SN1MC.Controls
     }
 
 
-#if false
     // Makes it so that you can still interact with the UI, even when the Game is not focused, which only makes sense in VR I guess.
-    // TODO: This is broken. Learn how this works, probably have to shift all the labels too somehow :/
     [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.OnUpdate))]
     [HarmonyDebug]
     static class ContinueOnLostFocus {
@@ -62,21 +60,22 @@ namespace SN1MC.Controls
             var mc = m.Clone();
 
             var patched = m.MatchForward(false, new CodeMatch[] {
+                // I tried to patch these four instruction out or make them always branch, but getting `Invalid IL: ret` error
                 // /* 0x00128725 286616000A   */ IL_0001: call      instance class [UnityEngine.UI]UnityEngine.EventSystems.EventSystem [UnityEngine.UI]UnityEngine.EventSystems.BaseInputModule::get_eventSystem()
                 // /* 0x0012872A 6F6716000A   */ IL_0006: callvirt  instance bool [UnityEngine.UI]UnityEngine.EventSystems.EventSystem::get_isFocused()
                 // /* 0x0012872F 2D01         */ IL_000B: brtrue.s  IL_000E
                 // /* 0x00128731 2A           */ IL_000D: ret
+                new CodeMatch(OpCodes.Ldarg_0),
                 new CodeMatch(OpCodes.Call),
                 new CodeMatch(OpCodes.Callvirt),
                 new CodeMatch(OpCodes.Brtrue),
                 new CodeMatch(OpCodes.Ret),
-            }).ThrowIfInvalid("Could not find target").RemoveInstructions(4);
+            }).ThrowIfInvalid("Could not find target").RemoveInstructions(5);
             // }).ThrowIfInvalid("Could not find target").SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Ldc_I4_1); 
 
             return patched.InstructionEnumeration();
         }
     }
-#endif
 
     // TODO: Not sure if needed. Is the GamepadInputModule used?
     // Wonder if it actually conflicts with the FPSInputModule or not
