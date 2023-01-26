@@ -19,6 +19,7 @@ namespace SN1MC.Controls
 
         public bool doWorldRaycasts = true;
         public bool useUILayer = false;
+        private float worldTargetTime;
         private GameObject worldTarget;
         private float worldTargetDistance;
 
@@ -76,9 +77,12 @@ namespace SN1MC.Controls
         // TODO: This is out of scope, refactor/cleanup
         public void SetWorldTarget(GameObject worldTarget, float worldTargetDistance)
         {
+            this.worldTargetTime = Time.unscaledTime;
             this.worldTarget = worldTarget;
             this.worldTargetDistance = worldTargetDistance;
         }
+
+        protected readonly float hideTimeout = 0.5f;
 
         void Update()
         {
@@ -93,7 +97,10 @@ namespace SN1MC.Controls
             }
             var uiHitRelativeTime = Time.unscaledTime - inputModule.lastValidRaycastTime;
             var uiHitDistance = inputModule.lastRaycastResult.distance;
-            var uiWasHit = uiHitDistance != 0 && uiHitRelativeTime < 0.5f; 
+            var uiWasHit = uiHitDistance != 0 && uiHitRelativeTime < hideTimeout; 
+
+            var worldHitRelativeTime = Time.unscaledTime - worldTargetTime;
+            var worldWasHit = doWorldRaycasts && worldTarget != null && worldHitRelativeTime < hideTimeout;
 
             float length = defaultLength;
             if (uiWasHit)
@@ -104,7 +111,7 @@ namespace SN1MC.Controls
                 length = uiHitDistance;
                 SteamVRInputManager.SwitchToUIBinding();
                 // TODO: Hide World Laserpointer similar to UI one after a timeout
-            } else if (doWorldRaycasts && this.worldTarget != null) {
+            } else if (worldWasHit) {
                 Show(true);
                 pointerDot.SetActive(true);
                 length = this.worldTargetDistance;

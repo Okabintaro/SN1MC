@@ -123,7 +123,6 @@ namespace SN1MC.Controls
 
         private Vector3 _targetAngle = TargetAngles.Default;
         private FPSInputModule fpsInput = null;
-        private bool trackRig = true;
 
         public Vector3 TargetAngle
         {
@@ -136,17 +135,6 @@ namespace SN1MC.Controls
                 laserPointerLeft.transform.localEulerAngles = value;
                 laserPointer.transform.localEulerAngles = value;
             }
-        }
-        public bool cinematicMode { set {
-            if (value) {
-                Invoke(nameof(this.DisableTracking), 0.1f);
-            } else {
-                this.trackRig = true;
-            }
-        } }
-
-        protected void DisableTracking() {
-            trackRig = false;
         }
 
         public static Transform GetTargetTansform()
@@ -364,9 +352,7 @@ namespace SN1MC.Controls
             // Move the camera rig to the player each frame and rotate the uiRig accordingly
             if (rigParentTarget != null)
             {
-                if (trackRig) {
-                    this.transform.SetPositionAndRotation(rigParentTarget.position, rigParentTarget.rotation);
-                }
+                this.transform.SetPositionAndRotation(rigParentTarget.position, rigParentTarget.rotation);
                 uiRig.transform.rotation = transform.rotation;
             }
             UpdateControllerPositions();
@@ -388,19 +374,7 @@ namespace SN1MC.Controls
 
     #region Patches
 
-    // There might be a better hook for this
-    [HarmonyPatch(typeof(MainCameraControl))]
-    [HarmonyPatch(nameof(MainCameraControl.cinematicMode), MethodType.Setter)]
-    public static class HandleCinematicMode
-    {
-        [HarmonyPostfix]
-        public static void Postfix(bool value)
-        {
-            VRCameraRig.instance.cinematicMode = value;
-        }
-    }
-
-    // There might be a better hook for this
+    // Create the Rig together with the uGUI Prefab
     [HarmonyPatch(typeof(uGUI), nameof(uGUI.Awake))]
     public static class uGUI_AwakeSetupRig
     {
@@ -568,7 +542,6 @@ namespace SN1MC.Controls
 
 
     // Don't disable the the automatic camera tracking of the UI Camera in the Main Game
-    // TODO: Cleanup/rewrite using CodeMatcher
     [HarmonyPatch(typeof(ManagedCanvasUpdate), nameof(ManagedCanvasUpdate.GetUICamera))]
     public static class PatchCameraTrackingDisabled
     {
