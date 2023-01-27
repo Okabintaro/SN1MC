@@ -150,18 +150,10 @@ namespace SN1MC
         public static void InitSteamVR()
         {
             UsingOculus = false;
-            Debug.Log("InitSteamVR");
             UsingSteamVR = true;
-            Debug.Log("UsingSteamVr: " + UsingSteamVR);
-            Debug.Log("Initializing SteamVR_Actions...");
             SteamVRActions.Valve.VR.SteamVR_Actions.PreInitialize();
-            Debug.Log("SteamVR Actions Initialize");
-            Debug.Log("Initializing SteamVR...");
             SteamVRRef.Valve.VR.SteamVR.Initialize();
-            Debug.Log("SteamVR Initialize");
-            Debug.Log("Initializing SteamVR Input...");
             SteamVRRef.Valve.VR.SteamVR_Input.Initialize();
-            Debug.Log("SteamVR Input Initialize");
             EVRInitError error = EVRInitError.None;
             OpenVR.Init(ref error, EVRApplicationType.VRApplication_Other);
             if (error != EVRInitError.None)
@@ -171,8 +163,6 @@ namespace SN1MC
             SteamVRRef.Valve.VR.OpenVR.Init(ref error1, SteamVRRef.Valve.VR.EVRApplicationType.VRApplication_Other);
             if (error1 != SteamVRRef.Valve.VR.EVRInitError.None)
                 Debug.Log("There is a error it is " + error1);
-
-            Recenter();
 
             //Get the type of HMD (for Pimax bugfixing)
             // PIMAX 5K Plus = Vive MV

@@ -7,7 +7,7 @@ using TMPro;
 class DebugPanel : MonoBehaviour {
 
     TextMeshProUGUI entry;
-    static DebugPanel main;
+    public static DebugPanel main;
 
     void Start() {
         var prefabMessage = ErrorMessage.main.prefabMessage;
@@ -18,6 +18,15 @@ class DebugPanel : MonoBehaviour {
         entry.text = "";
 
         main = this;
+    }
+
+    void OnDisable() {
+        entry.text = "";
+        entry.enabled = false;
+    }
+
+    void OnEnable() {
+        entry.enabled = true;
     }
 
     public static void Show(string message) {

@@ -42,12 +42,11 @@ namespace SN1MC
 		}
 
 		[HarmonyPatch(typeof(GameSettings), nameof(GameSettings.SerializeVRSettings))]
-		class SerializeVRSettings_Patch
+		static class SerializeVRSettings_Patch
 		{
-			static bool PreFix(GameSettings.ISerializer serializer)
+			static void Postfix(GameSettings.ISerializer serializer)
 			{
-				XRSettings.eyeTextureResolutionScale = serializer.Serialize("VR/RenderScale", XRSettings.eyeTextureResolutionScale);
-				VROptions.gazeBasedCursor = serializer.Serialize("VR/GazeBasedCursor", VROptions.gazeBasedCursor);
+				// TODO: Revise Settings
 				EnableMotionControls = serializer.Serialize("VR/EnableMotionControls", EnableMotionControls);
 				ikSmoothing = serializer.Serialize("VR/Smoothing", ikSmoothing);
 				laserPointerColor = serializer.Serialize("VR/LaserPointerColor", laserPointerColor);
@@ -55,7 +54,6 @@ namespace SN1MC
 				CyclopsPilot = serializer.Serialize("VR/CyclopsPilot", CyclopsPilot);
 				enableHandsWithoutTools = serializer.Serialize("VR/EnableHandsWithoutTools", enableHandsWithoutTools);
 				DebugEnabled = serializer.Serialize("VR/DebugEnabled", DebugEnabled);
-				return false;
 			}
 		}
 
@@ -65,7 +63,7 @@ namespace SN1MC
 			//ShowHideMenus();
 			tabIndex = optionsPanel.AddTab("VR Options");
 
-			optionsPanel.AddToggleOption(tabIndex, "Debug Mode", DebugEnabled, (bool v) => DebugEnabled = v, "Enable Debug Mode, Drawing Controllers and displaying messages.");
+			optionsPanel.AddToggleOption(tabIndex, "Debug Mode", DebugEnabled, (bool v) => { DebugEnabled = v; VRCameraRig.instance.DebugEnabled = v; }, "Enable Debug Mode, Drawing Controllers and displaying debug messages.");
 
 			optionsPanel.AddHeading(tabIndex, ColorString("Motion Control Options", headerColor));
 			optionsPanel.AddToggleOption(tabIndex, "Motion Controls Toggle", EnableMotionControls, delegate (bool v)

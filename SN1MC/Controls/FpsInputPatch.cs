@@ -47,7 +47,6 @@ namespace SN1MC.Controls
 
     // Makes it so that you can still interact with the UI, even when the Game is not focused, which only makes sense in VR I guess.
     [HarmonyPatch(typeof(FPSInputModule), nameof(FPSInputModule.OnUpdate))]
-    [HarmonyDebug]
     static class ContinueOnLostFocus {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {

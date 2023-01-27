@@ -92,15 +92,13 @@ namespace SN1MC
             SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_TakePicture.AddOnStateDownListener(OnRightJoystickPressedDown, SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand);
             SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_TakePicture.AddOnStateUpListener(OnRightJoystickPressedUp, SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand);*/
 
-
             // VECTOR 2Ds
             SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_Move.AddOnUpdateListener(OnLeftJoystickUpdate, SteamVRRef.Valve.VR.SteamVR_Input_Sources.LeftHand);
             SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_Look.AddOnUpdateListener(OnRightJoystickUpdate, SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand);
 
-
-            // POSES
-            SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_RightHandPose.AddOnUpdateListener(SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand, UpdateRightHand);
-            SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_LeftHandPose.AddOnUpdateListener(SteamVRRef.Valve.VR.SteamVR_Input_Sources.LeftHand, UpdateLeftHand);
+            //// POSES
+            //SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_RightHandPose.AddOnUpdateListener(SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand, UpdateRightHand);
+            //SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_LeftHandPose.AddOnUpdateListener(SteamVRRef.Valve.VR.SteamVR_Input_Sources.LeftHand, UpdateLeftHand);
         }
 
         // VECTOR 2Ds

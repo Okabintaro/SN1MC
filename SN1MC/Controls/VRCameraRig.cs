@@ -7,7 +7,6 @@ using System.Collections;
 using UWE;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using UnityEngine.EventSystems;
 
 
@@ -90,13 +89,24 @@ namespace SN1MC.Controls
         public GameObject modelR;
 
         public static VRCameraRig instance;
-        private GameObject modelRUI;
 
         public Camera uiCamera = null;
-        public bool uiTrackHead = false;
         public GameObject worldTarget;
         public float worldTargetDistance;
         private Transform rigParentTarget;
+
+        public bool DebugEnabled {
+            get {
+                return VRCustomOptionsMenu.DebugEnabled;
+            }
+            set {
+                // Show/Hide Controllers in Debug Mode
+                Mod.logger.LogInfo($"Set Debug mode to {value}");
+                modelL.SetActive(value);
+                modelR.SetActive(value);
+                DebugPanel.main.enabled = value;
+            }
+        }
 
         public Camera UIControllerCamera
         {
@@ -149,12 +159,21 @@ namespace SN1MC.Controls
             this.rigParentTarget = target;
         }
 
-
-        public void Start()
-        {
+        public void SetupSteamVR() {
             // TODO: Naming is inconsistent, clean this mess up, only need 1/2 pointers?
             leftController = new GameObject(nameof(leftController)).WithParent(transform);
             rightController = new GameObject(nameof(rightController)).WithParent(transform);
+
+            leftController.SetActive(false);
+            rightController.SetActive(false);
+            var controller = leftController.AddComponent<SteamVRRef.Valve.VR.SteamVR_Behaviour_Pose>();
+            controller.inputSource = SteamVRRef.Valve.VR.SteamVR_Input_Sources.LeftHand;
+            controller.poseAction = SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_LeftHandPose;
+            controller = rightController.AddComponent<SteamVRRef.Valve.VR.SteamVR_Behaviour_Pose>();
+            controller.inputSource = SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand;
+            controller.poseAction = SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_RightHandPose;
+            leftController.SetActive(true);
+            rightController.SetActive(true);
 
             leftHandTarget = new GameObject(nameof(leftHandTarget)).WithParent(leftController);
             rightHandTarget = new GameObject(nameof(rightHandTarget)).WithParent(rightController);
@@ -180,9 +199,16 @@ namespace SN1MC.Controls
             laserPointerUI.useUILayer = true;
             this.TargetAngle = TargetAngles.Default;
 
-            // TODO: Probably can get rid of this
-            vrCamera = new GameObject(nameof(vrCamera)).WithParent(transform).AddComponent<Camera>();
-            vrCamera.gameObject.tag = "MainCamera";
+            leftControllerUI.SetActive(false);
+            rightControllerUI.SetActive(false);
+            controller = leftControllerUI.AddComponent<SteamVRRef.Valve.VR.SteamVR_Behaviour_Pose>();
+            controller.inputSource = SteamVRRef.Valve.VR.SteamVR_Input_Sources.LeftHand;
+            controller.poseAction = SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_LeftHandPose;
+            controller = rightControllerUI.AddComponent<SteamVRRef.Valve.VR.SteamVR_Behaviour_Pose>();
+            controller.inputSource = SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand;
+            controller.poseAction = SteamVRActions.Valve.VR.SteamVR_Actions.subnauticaVRMain_RightHandPose;
+            leftControllerUI.SetActive(true);
+            rightControllerUI.SetActive(true);
 
             SetupControllerModels();
 
@@ -194,26 +220,34 @@ namespace SN1MC.Controls
             laserPointerUI.inputModule = fpsInput;
         }
 
+        public void Awake()
+        {
+            // TODO: Probably can get rid of this
+            vrCamera = new GameObject(nameof(vrCamera)).WithParent(transform).AddComponent<Camera>();
+            vrCamera.gameObject.tag = "MainCamera";
+        }
+
+        public void Start() {
+            SetupSteamVR();
+        }
+
         private void SetupControllerModels()
         {
             // Create two cubes to show controller positions
             // TODO: Replace with actual models from steamvr
-            modelR = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            modelR.transform.parent = rightControllerUI.transform;
-            modelR.transform.localPosition.Set(0, 0, 0);
-            modelR.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            Object.Destroy(modelR.GetComponent<BoxCollider>());
+            modelL = new GameObject(nameof(modelL)).WithParent(leftControllerUI).ResetTransform();
+            modelR = new GameObject(nameof(modelR)).WithParent(rightControllerUI).ResetTransform();
 
-            modelL = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            modelL.transform.parent = leftControllerUI.transform;
-            modelL.transform.localPosition.Set(0, 0, 0);
-            modelL.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-            Object.Destroy(modelL.GetComponent<BoxCollider>());
-
+            var model = modelR.AddComponent<SteamVRRef.Valve.VR.SteamVR_RenderModel>();
+            model.SetInputSource(SteamVRRef.Valve.VR.SteamVR_Input_Sources.RightHand);
+            model = modelL.AddComponent<SteamVRRef.Valve.VR.SteamVR_RenderModel>();
+            model.SetInputSource(SteamVRRef.Valve.VR.SteamVR_Input_Sources.LeftHand);
             modelL.layer = LayerID.UI;
             modelR.layer = LayerID.UI;
-            modelR.GetComponent<MeshRenderer>().enabled = VRCustomOptionsMenu.DebugEnabled;
-            modelL.GetComponent<MeshRenderer>().enabled = VRCustomOptionsMenu.DebugEnabled;
+
+            // TODO: Proper settings
+            // modelR.SetActive(VRCustomOptionsMenu.DebugEnabled);
+            // modelL.SetActive(VRCustomOptionsMenu.DebugEnabled);
         }
 
         // This is used to get the camera from the main menu
@@ -339,7 +373,7 @@ namespace SN1MC.Controls
         {
             if (SN1MC.UsingSteamVR)
             {
-                UpdateSteamVRControllers();
+                // UpdateSteamVRControllers();
             }
             else
             {
