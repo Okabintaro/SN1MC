@@ -302,6 +302,7 @@ namespace SN1MC.Controls
 
                 // Set all canvas scalers to static, which makes UI better usable
                 FindObjectsOfType<uGUI_CanvasScaler>().Where(obj => !obj.name.Contains("PDA")).ForEach(cs => cs.vrMode = uGUI_CanvasScaler.Mode.Static);
+                SetupPDA();
             }
             else
             {
@@ -310,6 +311,38 @@ namespace SN1MC.Controls
                 camera.transform.localRotation = Quaternion.identity;
             }
             uiCamera = camera;
+        }
+
+        void SetupPDA() {
+            // Move the quickslots to bottom of PDA bottom left and make it bigger
+            var pda = uGUI_PDA.main;
+            var targetParent = pda.tabInventory.transform;
+            var qs = FindObjectOfType<uGUI_QuickSlots>();
+            var qstf = qs.transform;
+
+            qstf.parent = targetParent;
+            qstf.localPosition = new Vector3(-250, -455, 4f);
+            qstf.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+            qstf.localRotation = Quaternion.identity;
+
+            // Add Pasuse Menu Button to PDA to PDA
+            var dialog = pda.GetComponentInChildren<uGUI_Dialog>(true);
+            var buttonPrefab = dialog.buttonPrefab;
+            var button = Object.Instantiate(buttonPrefab, targetParent).GetComponent<uGUI_DialogButton>();
+            button.button.transform.parent = targetParent;
+            button.button.gameObject.gameObject.name = "PauseMenuButton";
+            button.text.text = "Pause Menu";
+            button.button.onClick.RemoveAllListeners(); 
+            button.button.onClick.AddListener(() => {
+                IngameMenu.main.Open();
+            });
+            // Move it to the bottom right
+            button.rectTransform.anchoredPosition = new Vector2(1100, 50);
+            button.rectTransform.pivot = new Vector2(1, 0);
+            button.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 300);
+            button.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 100);
+            button.rectTransform.ForceUpdateRectTransforms();
+            button.rectTransform.GetComponentsInChildren<RectTransform>().ForEach(rt => rt.ForceUpdateRectTransforms());
         }
 
         public IEnumerator SetupGameCameras()
@@ -391,7 +424,7 @@ namespace SN1MC.Controls
             }
             UpdateControllerPositions();
 
-            if (VRCustomOptionsMenu.DebugEnabled) {
+            if (false && VRCustomOptionsMenu.DebugEnabled) {
                 RaycastResult? uiTarget = fpsInput?.lastRaycastResult;
                 DebugPanel.Show($"World Target: {worldTarget?.name}({worldTargetDistance})\nUI Target:{uiTarget?.gameObject?.name}({uiTarget?.distance})\nFocused: {EventSystem.current.isFocused}");
             }

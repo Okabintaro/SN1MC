@@ -17,7 +17,7 @@ namespace SN1MC
     //The Main Patch to start the mod and everything else
     extern alias SteamVRRef;
     extern alias SteamVRActions;
-    [BepInPlugin(pluginGUID, pluginGUID, pluginVersion)]
+    [BepInPlugin(pluginGUID, pluginName, pluginVersion)]
     [BepInProcess("subnautica.exe")]
     public class Mod : BaseUnityPlugin
     {
